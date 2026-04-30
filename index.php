@@ -279,7 +279,7 @@
         <!-- Image content -->
         <div class="hidden-mobile animate-fade-in-up delay-200">
             <div class="hero-image-container">
-                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1288&auto=format&fit=crop" alt="امرأة تتأمل في هدوء - ملاذ">
+                <img src="assets/images/womanPic.jpg" alt="امرأة تتأمل في هدوء - ملاذ">
             </div>
         </div>
         
