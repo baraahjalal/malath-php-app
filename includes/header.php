@@ -86,22 +86,20 @@
                 </div>
         </div>
 
-        <a href="profile.php" class="profile-avatar">
-            <!-- يمكنك لاحقاً عرض صورة المستخدم الحقيقية من الجلسة -->
+        <a href="profile.php" class="profile-avatar" title="ملفي الشخصي">
             <img src="<?= htmlspecialchars($user_avatar); ?>" alt="Profile">
         </a>
         
-        <!-- زر خروج اختياري -->
-      <!-- زر خروج يوجه لملف خارجي -->
-<a href="logout.php" title="تسجيل الخروج" style="color: var(--secondary);">
-    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-</a>
+        <!-- زر خروج -->
+        <a href="logout.php" title="تسجيل الخروج" class="btn-logout-icon">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </a>
 
     <?php else: ?>
         <!-- هذا الجزء يظهر للزوار فقط -->
-        <div class="flex gap-2">
-            <a href="login.php?redirect=community.php" class="nav-link">تسجيل الدخول</a>
-            <a href="register.php" class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;">إنضمي إلينا</a>
+        <div class="auth-buttons-container">
+            <a href="login.php?redirect=community.php" class="btn-login-outline">تسجيل الدخول</a>
+            <a href="register.php" class="btn-join-header">إنضمي إلينا</a>
         </div>
     <?php endif; ?>
 </div>
@@ -109,6 +107,72 @@
 </nav>
 
 <style>
+/* Header Auth Buttons */
+.auth-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.btn-login-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    background-color: transparent;
+    border: 2px solid var(--primary-container);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-login-outline:hover {
+    background-color: var(--primary-container);
+    color: var(--primary-dark);
+}
+
+.btn-join-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--primary-gradient, linear-gradient(135deg, #db2777, #9d174d));
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-join-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(219, 39, 119, 0.3);
+    color: #fff;
+}
+
+.btn-logout-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background-color: var(--surface-container, #f3f4f6);
+    color: var(--secondary, #4b5563);
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-logout-icon:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
 /* Temporary inline styles for media queries missing in main css */
 @media (max-width: 768px) {
   .hidden-mobile { display: none !important; }

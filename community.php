@@ -27,6 +27,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_id) {
         header("Location: community.php?c=".urlencode($current_slug));
         exit;
     }
+
+    // ==== معالجة الإعجاب والتعليق والحفظ ==== //
+    if (isset($_POST['toggle_like'])) {
+        $p_id = intval($_POST['post_id']);
+        $chk = $pdo->prepare("SELECT id FROM post_likes WHERE post_id=? AND user_id=?");
+        $chk->execute([$p_id, $user_id]);
+        if ($chk->fetch()) {
+            $pdo->prepare("DELETE FROM post_likes WHERE post_id=? AND user_id=?")->execute([$p_id, $user_id]);
+        } else {
+            $pdo->prepare("INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)")->execute([$p_id, $user_id]);
+        }
+        header("Location: community.php?c=".urlencode($current_slug)."#post-".$p_id);
+        exit;
+    }
+
+    if (isset($_POST['toggle_save'])) {
+        $p_id = intval($_POST['post_id']);
+        $chk = $pdo->prepare("SELECT id FROM post_saves WHERE post_id=? AND user_id=?");
+        $chk->execute([$p_id, $user_id]);
+        if ($chk->fetch()) {
+            $pdo->prepare("DELETE FROM post_saves WHERE post_id=? AND user_id=?")->execute([$p_id, $user_id]);
+        } else {
+            $pdo->prepare("INSERT INTO post_saves (post_id, user_id) VALUES (?, ?)")->execute([$p_id, $user_id]);
+        }
+        header("Location: community.php?c=".urlencode($current_slug)."#post-".$p_id);
+        exit;
+    }
+
+    if (isset($_POST['submit_comment'])) {
+        $p_id = intval($_POST['post_id']);
+        $content = trim($_POST['comment_content'] ?? '');
+        if ($content) {
+            $pdo->prepare("INSERT INTO post_comments (post_id, user_id, content) VALUES (?, ?, ?)")->execute([$p_id, $user_id, $content]);
+        }
+        header("Location: community.php?c=".urlencode($current_slug)."#post-".$p_id);
+        exit;
+    }
 }
 
 // الآن نقوم بتضمين الهيدر لأننا انتهينا من التوجيه (Redirects)
@@ -68,26 +105,26 @@ if ($user_id && isset($_POST['submit_post'])) {
 }
 
 // ==== جلب جميع المنشورات للمجتمع المختار (أو الكل) ==== //
+$base_query = "
+    SELECT p.*, u.name AS user_name, u.avatar AS user_avatar, c.name AS community_name,
+           (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) AS likes_count,
+           (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) AS comments_count,
+           (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = :uid1) AS is_liked,
+           (SELECT COUNT(*) FROM post_saves WHERE post_id = p.id AND user_id = :uid2) AS is_saved
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    JOIN communities c ON c.id = p.community_id
+";
+
 if ($current_community) {
-    $st = $pdo->prepare("
-      SELECT p.*, u.name AS user_name, u.avatar AS user_avatar, c.name AS community_name
-      FROM posts p 
-      JOIN users u ON u.id = p.user_id
-      JOIN communities c ON c.id = p.community_id
-      WHERE c.id = ?
-      ORDER BY p.created_at DESC
-    ");
-    $st->execute([$current_community['id']]);
+    $st = $pdo->prepare($base_query . " WHERE c.id = :cid ORDER BY p.created_at DESC");
+    $st->execute(['uid1' => $user_id ?? 0, 'uid2' => $user_id ?? 0, 'cid' => $current_community['id']]);
 } else {
-    $st = $pdo->query("
-      SELECT p.*, u.name AS user_name, u.avatar AS user_avatar, c.name AS community_name
-      FROM posts p
-      JOIN users u ON u.id = p.user_id
-      JOIN communities c ON c.id = p.community_id
-      ORDER BY p.created_at DESC
-    ");
+    $st = $pdo->prepare($base_query . " ORDER BY p.created_at DESC");
+    $st->execute(['uid1' => $user_id ?? 0, 'uid2' => $user_id ?? 0]);
 }
 $posts = $st->fetchAll();
+
 
 ?>
 <style>
@@ -281,7 +318,41 @@ $posts = $st->fetchAll();
     border: 1px solid rgba(0,0,0,0.04);
     margin-bottom: 1.5rem;
     transition: all 0.3s ease;
+    scroll-margin-top: 100px;
 }
+
+.interaction-btn {
+    background: none;
+    border: none;
+    color: var(--secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    padding: 0.4rem 0.8rem;
+    border-radius: 2rem;
+    font-family: inherit;
+}
+.interaction-btn:hover {
+    background-color: var(--surface-container);
+    color: var(--primary);
+}
+.interaction-btn.active-like {
+    color: #e11d48;
+}
+.interaction-btn.active-like:hover {
+    background-color: #ffe4e6;
+}
+.interaction-btn.active-save {
+    color: #0284c7;
+}
+.interaction-btn.active-save:hover {
+    background-color: #e0f2fe;
+}
+
 
 .feed-card:hover {
     box-shadow: 0 10px 30px rgba(155, 98, 112, 0.08);
@@ -596,8 +667,19 @@ $posts = $st->fetchAll();
     <!-- عرض المنشورات -->
     <div class="feed-list">
       <?php if($posts): ?>
-        <?php foreach($posts as $post): ?>
-          <div class="feed-card animate-fade-in-up" style="margin-bottom:2.3rem;">
+        <?php foreach($posts as $post): 
+            // Fetch comments for this post
+            $st_comm = $pdo->prepare("
+                SELECT pc.*, cu.name as user_name, cu.avatar as user_avatar 
+                FROM post_comments pc 
+                JOIN users cu ON pc.user_id = cu.id 
+                WHERE pc.post_id = ? 
+                ORDER BY pc.created_at ASC
+            ");
+            $st_comm->execute([$post['id']]);
+            $comments = $st_comm->fetchAll();
+        ?>
+          <div class="feed-card animate-fade-in-up" id="post-<?=$post['id']?>" style="margin-bottom:2.3rem;">
             <div class="post-header">
               <div class="user-info">
                 <img src="<?=htmlspecialchars($post['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" class="user-avatar">
@@ -617,12 +699,83 @@ $posts = $st->fetchAll();
               <h3 style="margin-bottom: .6rem;"><?=htmlspecialchars($post['title'])?></h3>
             <?php endif;?>
             <div class="post-content"><?=nl2br(htmlspecialchars($post['content']))?></div>
+            
+            <!-- شريط التفاعل -->
+            <div class="post-interaction-bar" style="display:flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--outline-variant);">
+                <div style="display:flex; gap: 1rem;">
+                    <form method="POST" style="margin:0;">
+                        <input type="hidden" name="post_id" value="<?=$post['id']?>">
+                        <button type="submit" name="toggle_like" class="interaction-btn <?= $post['is_liked'] ? 'active-like' : '' ?>">
+                            <i class="<?= $post['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
+                            <span><?= $post['likes_count'] ?> إعجاب</span>
+                        </button>
+                    </form>
+                    <button type="button" class="interaction-btn" onclick="toggleComments(<?=$post['id']?>)">
+                        <i class="fa-regular fa-comment"></i>
+                        <span><?= $post['comments_count'] ?> تعليق</span>
+                    </button>
+                </div>
+                <form method="POST" style="margin:0;">
+                    <input type="hidden" name="post_id" value="<?=$post['id']?>">
+                    <button type="submit" name="toggle_save" class="interaction-btn <?= $post['is_saved'] ? 'active-save' : '' ?>">
+                        <i class="<?= $post['is_saved'] ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
+                        <span><?= $post['is_saved'] ? 'مُحفوظ' : 'حفظ' ?></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- منطقة التعليقات -->
+            <div id="comments-section-<?=$post['id']?>" style="display: none; margin-top: 1rem; background-color: var(--surface-container-high); padding: 1.5rem; border-radius: 1.5rem;">
+                <!-- List Comments -->
+                <?php if(!$comments): ?>
+                    <p style="color: var(--secondary); font-size: 0.9rem; text-align: center; margin-bottom: 1rem;">لا توجد تعليقات بعد. كوني أول من يعلق!</p>
+                <?php else: ?>
+                    <?php foreach($comments as $comm): ?>
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <img src="<?=htmlspecialchars($comm['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
+                            <div style="background-color: #ffffff; padding: 1rem 1.2rem; border-radius: 1.5rem; border-top-right-radius: 0; flex-grow: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+                                    <b style="font-size: 0.9rem; color: var(--primary-dark); font-family: var(--font-headline); font-weight: 800;"><?=htmlspecialchars($comm['user_name'])?></b>
+                                    <small style="color: var(--secondary); font-size: 0.75rem;"><?=date('Y-m-d H:i', strtotime($comm['created_at']))?></small>
+                                </div>
+                                <div style="font-size: 0.95rem; color: var(--on-surface); line-height: 1.6;"><?=nl2br(htmlspecialchars($comm['content']))?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                
+                <!-- Add Comment Form -->
+                <?php if($user_id): ?>
+                <form method="POST" style="display: flex; gap: 0.8rem; margin-top: 1.5rem; align-items: flex-start;">
+                    <input type="hidden" name="post_id" value="<?=$post['id']?>">
+                    <img src="<?=htmlspecialchars($user_avatar ?? 'assets/images/default-avatar.png')?>" alt="U" style="width: 2.5rem; height: 2.5rem; border-radius: 50%;">
+                    <div style="flex-grow: 1; position: relative;">
+                        <textarea name="comment_content" placeholder="اكتبي تعليقاً لطيفاً داعماً..." required style="width: 100%; border-radius: 1.5rem; border: 1px solid var(--outline-variant); padding: 0.8rem 1.2rem; background-color: #ffffff; font-family: inherit; font-size: 0.95rem; resize: none; min-height: 50px;"></textarea>
+                    </div>
+                    <button type="submit" name="submit_comment" class="btn-primary" style="border-radius: 50%; width: 2.8rem; height: 2.8rem; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;"><i class="fa-solid fa-paper-plane" style="margin-right: -3px;"></i></button>
+                </form>
+                <?php else: ?>
+                <div style="text-align: center; color: var(--secondary); font-size: 0.9rem; margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 1rem;">سجلي دخولك لتتمكني من التعليق.</div>
+                <?php endif; ?>
+            </div>
+
           </div>
         <?php endforeach; ?>
       <?php else:?>
         <div style="text-align:center; color:#888;">لا توجد منشورات بعد في هذا المجتمع.</div>
       <?php endif;?>
     </div>
+
+<script>
+function toggleComments(postId) {
+    var section = document.getElementById('comments-section-' + postId);
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+    } else {
+        section.style.display = 'none';
+    }
+}
+</script>
 
   </main>
 </div>
