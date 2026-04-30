@@ -1,15 +1,95 @@
-<?php 
-// بدء الجلسة إذا لم تكن مبدوءة
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+<?php
+// community.php
+
+// 1) إعداد الجلسة وربط قاعدة البيانات
+if (session_status() === PHP_SESSION_NONE) session_start();
+include 'includes/db.php';
+
+// ==== المتغيرات العامة ==== //
+$user_id = $_SESSION['user_id'] ?? null;
+
+// استخراج سلاَج المجتمع من الرابط (أو all)
+$current_slug = $_GET['c'] ?? 'all';
+
+// ==== معالجة أزرار الانضمام/الانسحاب ==== //
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_id) {
+    // انضمام
+    if (isset($_POST['join_community']) && isset($_POST['community_id'])) {
+        $st = $pdo->prepare("INSERT IGNORE INTO user_communities(user_id, community_id) VALUES(?, ?)");
+        $st->execute([$user_id, intval($_POST['community_id'])]);
+        header("Location: community.php?c=".urlencode($current_slug));
+        exit;
+    }
+    // انسحاب
+    if (isset($_POST['leave_community']) && isset($_POST['community_id'])) {
+        $st = $pdo->prepare("DELETE FROM user_communities WHERE user_id=? AND community_id=?");
+        $st->execute([$user_id, intval($_POST['community_id'])]);
+        header("Location: community.php?c=".urlencode($current_slug));
+        exit;
+    }
 }
-include 'includes/header.php'; 
 
-// التحقق من المجتمع المختار في الرابط (مثال: community.php?c=health)
-// إذا لم يتم تحديد مجتمع، نعرض "كل المجتمعات"
-$current_community = $_GET['c'] ?? 'all';
+// الآن نقوم بتضمين الهيدر لأننا انتهينا من التوجيه (Redirects)
+include 'includes/header.php';
+
+// جلب جميع المجتمعات من الجدول
+$communities = $pdo->query("SELECT * FROM communities")->fetchAll();
+
+$current_community = null;
+foreach ($communities as $c) {
+    if ($c['slug'] === $current_slug) $current_community = $c;
+}
+
+// جلب مجتمعات المستخدم المنضم لها (كمصفوفة أرقام)
+$user_communities = [];
+if ($user_id) {
+    $st = $pdo->prepare("SELECT community_id FROM user_communities WHERE user_id=?");
+    $st->execute([$user_id]);
+    $user_communities = array_column($st->fetchAll(), 'community_id');
+}
+
+
+// ==== منطق النشر ==== //
+$post_message = '';
+if ($user_id && isset($_POST['submit_post'])) {
+    $type = $_POST['type'] ?? 'vent';
+    $content = trim($_POST['content'] ?? '');
+    $community_id = intval($_POST['post_community_id'] ?? 0);
+    $title = trim($_POST['post_title'] ?? '');
+
+    // تحقق المستخدم منضم للمجتمع
+    if ($community_id && in_array($community_id, $user_communities) && $content) {
+        $st = $pdo->prepare("INSERT INTO posts (user_id, community_id, type, title, content, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+        $st->execute([$user_id, $community_id, $type, $title, $content]);
+        $post_message = "✔ تم نشر المحتوى بنجاح";
+    } else {
+        $post_message = "⚠ يجب أن تكوني ضمن المجتمع المختار وأن تكتبي محتوى.";
+    }
+}
+
+// ==== جلب جميع المنشورات للمجتمع المختار (أو الكل) ==== //
+if ($current_community) {
+    $st = $pdo->prepare("
+      SELECT p.*, u.name AS user_name, u.avatar AS user_avatar, c.name AS community_name
+      FROM posts p 
+      JOIN users u ON u.id = p.user_id
+      JOIN communities c ON c.id = p.community_id
+      WHERE c.id = ?
+      ORDER BY p.created_at DESC
+    ");
+    $st->execute([$current_community['id']]);
+} else {
+    $st = $pdo->query("
+      SELECT p.*, u.name AS user_name, u.avatar AS user_avatar, c.name AS community_name
+      FROM posts p
+      JOIN users u ON u.id = p.user_id
+      JOIN communities c ON c.id = p.community_id
+      ORDER BY p.created_at DESC
+    ");
+}
+$posts = $st->fetchAll();
+
 ?>
-
 <style>
 /* Community Page Specific Styles - Feminine, Clean & Polished */
 .community-header {
@@ -91,7 +171,7 @@ $current_community = $_GET['c'] ?? 'all';
 
 .create-post-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -99,26 +179,73 @@ $current_community = $_GET['c'] ?? 'all';
 .create-post-input {
     flex-grow: 1;
     background-color: var(--surface-container-high);
-    border-radius: 2rem;
-    padding: 1rem 1.5rem;
-    color: var(--secondary);
+    border-radius: 1.2rem;
+    padding: 1.2rem 1.5rem;
+    color: var(--on-surface);
     border: 1px solid transparent;
-    cursor: pointer;
     transition: all 0.3s ease;
-    font-family: var(--font-body);
+    font-family: inherit;
+    resize: none;
+    min-height: 80px;
+    font-size: 1rem;
 }
 
-.create-post-input:hover {
-    background-color: var(--surface-container);
-    border-color: rgba(197, 58, 98, 0.1);
+.create-post-input:focus {
+    background-color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(197, 58, 98, 0.08);
+    outline: none;
 }
 
 .create-post-actions {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem;
     align-items: center;
-    padding-top: 1rem;
+    padding-top: 1.2rem;
     border-top: 1px solid var(--outline-variant);
+}
+
+.create-post-select, .create-post-text {
+    background-color: var(--surface-container);
+    border: 1px solid transparent;
+    padding: 0.6rem 1.2rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    color: var(--secondary);
+    font-family: inherit;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.create-post-text {
+    flex-grow: 1;
+    min-width: 150px;
+}
+
+.create-post-select:focus, .create-post-text:focus {
+    background-color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(197, 58, 98, 0.08);
+}
+
+.create-post-btn {
+    padding: 0.6rem 1.8rem;
+    border-radius: 2rem;
+    font-weight: 800;
+    margin-right: auto;
+}
+
+.post-success-msg {
+    background-color: #ecfdf5;
+    color: #059669;
+    padding: 0.8rem 1.2rem;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .action-btn-group {
@@ -312,190 +439,192 @@ $current_community = $_GET['c'] ?? 'all';
     color: var(--primary);
     font-weight: bold;
 }
+/* Join and Leave Buttons */
+.btn-join {
+    background-color: var(--primary-container, #fce7f3);
+    color: var(--primary-dark, #be185d);
+    border: 1px solid transparent;
+    padding: 0.4rem 1.2rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-join:hover {
+    background-color: var(--primary, #db2777);
+    color: white;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-leave {
+    background-color: var(--surface-container, #f3f4f6);
+    color: var(--secondary, #4b5563);
+    border: 1px solid var(--outline-variant, #e5e7eb);
+    padding: 0.4rem 1.2rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-leave:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+}
+
 </style>
 
-<!-- Header Section -->
 <div class="community-header">
-    <div class="container animate-fade-in-up">
-        <h1 class="community-title">مجتمعات ملاذ</h1>
-        <p style="color: var(--secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
-            مساحتك الآمنة للتفاعل، التعلم، ومشاركة تجاربك في بيئة نسائية داعمة ومحفزة.
-        </p>
-        
-        <!-- Tabs for the 4 Pillars -->
-        <div class="community-tabs-container">
-            <a href="community.php?c=all" class="community-tab <?= $current_community == 'all' ? 'active' : '' ?>">
-                <i class="fa-solid fa-layer-group"></i> الأحدث
-            </a>
-            <a href="community.php?c=health" class="community-tab <?= $current_community == 'health' ? 'active' : '' ?>">
-                <i class="fa-solid fa-seedling"></i> الصحي
-            </a>
-            <a href="community.php?c=psychology" class="community-tab <?= $current_community == 'psychology' ? 'active' : '' ?>">
-                <i class="fa-solid fa-heart-pulse"></i> النفسي
-            </a>
-            <a href="community.php?c=religion" class="community-tab <?= $current_community == 'religion' ? 'active' : '' ?>">
-                <i class="fa-solid fa-book-open"></i> الديني
-            </a>
-            <a href="community.php?c=academic" class="community-tab <?= $current_community == 'academic' ? 'active' : '' ?>">
-                <i class="fa-solid fa-star"></i> الأكاديمي
-            </a>
-        </div>
+  <div class="container animate-fade-in-up">
+    <h1 class="community-title">مجتمعات ملاذ</h1>
+    <p>مساحتك الآمنة للتفاعل، التعلم، ومشاركة تجاربك في بيئة نسائية داعمة ومحفزة.</p>
+    <!-- تبويبات المجتمعات -->
+    <div class="community-tabs-container">
+      <a href="community.php?c=all" class="community-tab<?= $current_slug === 'all' ? ' active' : '' ?>">الأحدث</a>
+      <?php foreach($communities as $c): ?>
+        <a href="community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-tab<?= $current_slug === $c['slug'] ? ' active' : '' ?>">
+          <?=htmlspecialchars($c['name'])?>
+        </a>
+      <?php endforeach; ?>
     </div>
+  </div>
 </div>
 
 <div class="community-layout">
-    <!-- Sidebar (Visual Right) -->
-    <aside class="animate-fade-in-up delay-100">
-        <!-- مجتمعاتي -->
-        <div class="sidebar-widget">
-            <h3 class="widget-title">مجتمعاتي <span style="font-size:0.8rem; font-weight:normal; color:var(--secondary);">(المنضمة لها)</span></h3>
-            
-            <?php if(isset($_SESSION['user_id'])): ?>
-                <!-- هنا سيتم جلب المجتمعات التي انضمت لها المستخدمة من الداتا بيز (جدول user_communities) -->
-                <a href="community.php?c=psychology" class="community-list-item">
-                    <div class="community-icon-small"><i class="fa-solid fa-heart-pulse"></i></div>
-                    <div style="font-weight: 700;">المجتمع النفسي</div>
-                </a>
-                <a href="community.php?c=academic" class="community-list-item">
-                    <div class="community-icon-small"><i class="fa-solid fa-star"></i></div>
-                    <div style="font-weight: 700;">المجتمع الأكاديمي</div>
-                </a>
-            <?php else: ?>
-                <div style="text-align: center; padding: 1rem 0;">
-                    <p style="font-size: 0.9rem; color: var(--secondary); margin-bottom: 1rem;">سجلي دخولك لتتمكني من الانضمام للمجتمعات وتخصيص تجربتك.</p>
-                    <a href="login.php?redirect=community.php" class="btn-outline" style="padding: 6px 15px; font-size: 0.9rem; text-decoration:none;">تسجيل الدخول</a>
-                </div>
-            <?php endif; ?>
+  <!-- الشريط الجانبي -->
+  <aside>
+    <div class="sidebar-widget">
+      <h3 class="widget-title">كل المجتمعات</h3>
+      <?php foreach($communities as $c): ?>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+          <a href="community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item" style="flex:1;">
+            <?=htmlspecialchars($c['name'])?>
+          </a>
+          <?php if($user_id): ?>
+            <form method="post" style="display:inline;">
+              <input type="hidden" name="community_id" value="<?=$c['id']?>">
+              <?php if (!in_array($c['id'], $user_communities)): ?>
+                <button type="submit" name="join_community" class="btn-join">انضمام</button>
+              <?php else: ?>
+                <button type="submit" name="leave_community" class="btn-leave">انسحاب</button>
+              <?php endif; ?>
+            </form>
+          <?php endif; ?>
         </div>
+      <?php endforeach; ?>
+    </div>
 
-        <!-- مساحة إلهام أو قوانين -->
-        <div class="sidebar-widget" style="background: var(--surface-container-high); border: none;">
-            <h3 class="widget-title" style="display:flex; align-items:center; gap:0.5rem;">
-                <i class="fa-solid fa-shield-heart" style="color: var(--primary);"></i> مساحة آمنة
-            </h3>
-            <ul class="rules-list">
-                <li>احترمي آراء الأخريات وتجنبي الأحكام.</li>
-                <li>يُمنع نشر أي محتوى يسيء للأديان أو الأشخاص.</li>
-                <li>حافظي على سرية الفضفضة والقصص المطروحة هنا.</li>
-                <li>المقالات يجب أن تُنشر في مجتمعها الصحيح.</li>
-            </ul>
-        </div>
-    </aside>
+    <div class="sidebar-widget">
+      <h3 class="widget-title">مجتمعاتي (المنضمة لها)</h3>
+      <?php if($user_id && $user_communities): ?>
+        <?php foreach($communities as $c):
+          if(!in_array($c['id'], $user_communities)) continue; ?>
+          <a href="community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item">
+            <?=htmlspecialchars($c['name'])?>
+          </a>
+        <?php endforeach; ?>
+      <?php elseif(!$user_id): ?>
+        <p style="font-size:0.95rem; color:#a78;">سجلي دخولك لتخصيص تجربتك والانضمام للمجتمعات.</p>
+        <a href="login.php?redirect=community.php" class="btn-outline">تسجيل الدخول</a>
+      <?php else: ?>
+        <div>لم تنضمي لأي مجتمع بعد.</div>
+      <?php endif; ?>
+    </div>
 
-    <!-- Main Feed (Visual Left) -->
-    <main>
-        
-        <!-- Create Post Box (Only for Logged In Users) -->
-        <?php if(isset($_SESSION['user_id'])): ?>
-        <div class="create-post-box animate-fade-in-up">
-            <div class="create-post-top">
-                <img src="assets/images/default-avatar.png" alt="Profile" class="user-avatar" style="width: 2.5rem; height: 2.5rem;">
-                <div class="create-post-input" onclick="alert('سيتم برمجة نافذة منبثقة (Modal) لإضافة منشور لاحقاً')">
-                    شاركِ فضفضة، سؤال، أو مقالة مفيدة...
-                </div>
-            </div>
-            <div class="create-post-actions">
-                <div class="action-btn-group">
-                    <button class="type-btn"><i class="fa-solid fa-pen-nib"></i> مقالة رسمية</button>
-                    <button class="type-btn"><i class="fa-regular fa-comment-dots"></i> نقاش وفضفضة</button>
-                </div>
-                <!-- زر اختيار المجتمع الذي سينشر فيه -->
-                <button class="btn-primary" style="padding: 6px 15px; font-size: 0.9rem; border-radius: 1.5rem;">نشر محتوى</button>
-            </div>
-        </div>
-        <?php else: ?>
-        <div class="create-post-box animate-fade-in-up" style="text-align: center; padding: 2rem;">
-            <h3 style="color: var(--primary-dark); margin-bottom: 0.5rem; font-family: var(--font-headline);">شاركي صوتك معنا</h3>
-            <p style="color: var(--secondary); margin-bottom: 1rem;">لتتمكني من طرح الأسئلة أو نشر المقالات، يجب أن تكوني فرداً من عائلة ملاذ.</p>
-            <a href="register.php" class="btn-primary" style="text-decoration:none; display:inline-block;">إنشاء حساب جديد</a>
-        </div>
+    <div class="sidebar-widget" style="background:var(--surface-container-high); border:none;">
+      <h3 class="widget-title"><i class="fa-solid fa-shield-heart" style="color:var(--primary);"></i> مساحة آمنة</h3>
+      <ul class="rules-list">
+        <li>احترمي آراء الأخريات وتجنبي الأحكام.</li>
+        <li>يُمنع نشر أي محتوى يسيء للأديان أو الأشخاص.</li>
+        <li>حافظي على سرية الفضفضة والقصص المطروحة هنا.</li>
+        <li>المقالات يجب أن تُنشر في مجتمعها الصحيح.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- القسم الرئيسي -->
+  <main>
+    <!-- نموذج نشر منشور -->
+    <?php if($user_id && $user_communities): ?>
+      <div class="create-post-box animate-fade-in-up">
+        <?php if($post_message): ?>
+          <div class="post-success-msg"><i class="fa-solid fa-circle-check"></i> <?=htmlspecialchars($post_message)?></div>
         <?php endif; ?>
+        <form method="post">
+          <div class="create-post-top">
+            <img src="<?=htmlspecialchars($user_avatar ?? 'assets/images/default-avatar.png')?>" alt="Profile" class="user-avatar" style="width:3rem;height:3rem;">
+            <textarea name="content" class="create-post-input" required placeholder="بم تفكرين؟ شاركي أفكارك، أسئلتك، أو تجربتك هنا..."></textarea>
+          </div>
+          <div class="create-post-actions">
+            <select name="type" class="create-post-select" required>
+              <option value="vent">🗣 فضفضة</option>
+              <option value="advice">💡 طلب نصيحة</option>
+              <option value="question">❓ سؤال</option>
+              <option value="article">📝 مقالة رسمية</option>
+            </select>
+            <select name="post_community_id" class="create-post-select" required>
+              <?php foreach($communities as $c): if(in_array($c['id'],$user_communities)): ?>
+                <option value="<?=$c['id']?>"<?= ($current_community && $c['id']==$current_community['id']) ? ' selected' : '' ?>>
+                  <?=htmlspecialchars($c['name'])?>
+                </option>
+              <?php endif; endforeach;?>
+            </select>
+            <input type="text" name="post_title" class="create-post-text" placeholder="عنوان المقال (اختياري)">
+            <button type="submit" name="submit_post" class="btn-primary create-post-btn">نشر الآن</button>
+          </div>
+        </form>
+      </div>
+    <?php elseif($user_id): ?>
+      <div class="create-post-box" style="text-align:center; opacity:.85;">
+        <b>انضمي لمجتمع أولاً لتتمكني من النشر فيه</b>
+      </div>
+    <?php else: ?>
+      <div class="create-post-box" style="text-align:center;">
+        <p>لتتمكني من النشر، قومي بتسجيل الدخول أو إنشاء حساب جديد.</p>
+        <a href="login.php?redirect=community.php" class="btn-primary">تسجيل الدخول</a>
+        <a href="register.php" class="btn-outline">إنشاء حساب جديد</a>
+      </div>
+    <?php endif; ?>
 
-        <!-- Feed List -->
-        <div class="feed-list">
-            
-            <!-- نموذج 1: منشور فضفضة / طلب نصيحة (Post) -->
-            <div class="feed-card animate-fade-in-up delay-100">
-                <div class="post-header">
-                    <div class="user-info">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop" alt="User" class="user-avatar">
-                        <div>
-                            <a href="#" class="user-name">نورة أحمد</a>
-                            <div class="post-meta">نُشر في <strong>المجتمع النفسي</strong> • منذ ساعتين</div>
-                        </div>
-                    </div>
-                    <span class="badge-type badge-vent">فضفضة</span>
+    <!-- عرض المنشورات -->
+    <div class="feed-list">
+      <?php if($posts): ?>
+        <?php foreach($posts as $post): ?>
+          <div class="feed-card animate-fade-in-up" style="margin-bottom:2.3rem;">
+            <div class="post-header">
+              <div class="user-info">
+                <img src="<?=htmlspecialchars($post['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" class="user-avatar">
+                <div>
+                  <b class="user-name"><?=htmlspecialchars($post['user_name'])?></b>
+                  <div class="post-meta">
+                    نُشر في <b><?=htmlspecialchars($post['community_name'])?></b>
+                    • <?=date('Y-m-d H:i', strtotime($post['created_at']))?>
+                  </div>
                 </div>
-                <div class="post-content">
-                    السلام عليكم بنات، أنا أمر بفترة ضغط دراسي ونفسي كبيرة جداً هذه الأيام، أحس إني فاقدة للشغف ومش قادرة أركز في أي شيء. هل في حد مر بنفس التجربة؟ وكيف قدرتوا تتجاوزوها وترجعوا لروتينكم؟ محتاجة دعمكم ونصائحكم 💔
-                </div>
-                <div class="post-footer">
-                    <div class="interaction-btns">
-                        <button class="interact-btn"><i class="fa-regular fa-heart"></i> ٤٥</button>
-                        <button class="interact-btn"><i class="fa-regular fa-comment"></i> ١٢ تعليق</button>
-                    </div>
-                    <button class="interact-btn" title="حفظ"><i class="fa-regular fa-bookmark"></i></button>
-                </div>
+              </div>
+              <span class="badge-type badge-<?=htmlspecialchars($post['type'])?>">
+                <?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$post['type']] ?? $post['type'] ?>
+              </span>
             </div>
+            <?php if($post['title']): ?>
+              <h3 style="margin-bottom: .6rem;"><?=htmlspecialchars($post['title'])?></h3>
+            <?php endif;?>
+            <div class="post-content"><?=nl2br(htmlspecialchars($post['content']))?></div>
+          </div>
+        <?php endforeach; ?>
+      <?php else:?>
+        <div style="text-align:center; color:#888;">لا توجد منشورات بعد في هذا المجتمع.</div>
+      <?php endif;?>
+    </div>
 
-            <!-- نموذج 2: مقالة رسمية (Article) -->
-            <div class="feed-card animate-fade-in-up delay-200">
-                <div class="post-header">
-                    <div class="user-info">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" alt="User" class="user-avatar">
-                        <div>
-                            <a href="#" class="user-name">د. سارة محمد</a>
-                            <div class="post-meta">نُشر في <strong>المجتمع الصحي</strong> • أمس</div>
-                        </div>
-                    </div>
-                    <span class="badge-type badge-article">مقالة</span>
-                </div>
-                <h2 style="font-family: var(--font-headline); font-weight: 800; color: var(--primary-dark); margin-bottom: 1rem;">دليلك الشامل لتغذية صحية خلال فترات التوتر</h2>
-                <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1453&auto=format&fit=crop" alt="Healthy Food" class="article-image-preview">
-                <div class="post-content" style="font-size: 0.95rem; color: var(--secondary);">
-                    في أوقات التوتر والضغط، غالباً ما نلجأ إلى الأطعمة السريعة أو المليئة بالسكريات كنوع من التعويض العاطفي، لكن هذا يزيد الأمر سوءاً على المدى الطويل. في هذا المقال نتعرف على أطعمة تساهم في تعديل المزاج وتهدئة الأعصاب بشكل علمي وصحي...
-                    <a href="article.php?id=1" style="color: var(--primary); font-weight: 700; text-decoration: none;">(اقرئي المزيد)</a>
-                </div>
-                <div class="post-footer">
-                    <div class="interaction-btns">
-                        <button class="interact-btn" style="color: var(--primary);"><i class="fa-solid fa-heart"></i> ٢١٠</button>
-                        <button class="interact-btn"><i class="fa-regular fa-comment"></i> ٣٤ تعليق</button>
-                    </div>
-                    <button class="interact-btn" title="حفظ"><i class="fa-regular fa-bookmark"></i></button>
-                </div>
-            </div>
-
-            <!-- نموذج 3: سؤال سريع (Post) -->
-            <div class="feed-card animate-fade-in-up delay-300">
-                <div class="post-header">
-                    <div class="user-info">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" alt="User" class="user-avatar">
-                        <div>
-                            <a href="#" class="user-name">ريم الخالدي</a>
-                            <div class="post-meta">نُشر في <strong>المجتمع الأكاديمي</strong> • قبل ٤ ساعات</div>
-                        </div>
-                    </div>
-                    <span class="badge-type badge-question">سؤال</span>
-                </div>
-                <div class="post-content">
-                    بنات، شنو أفضل المصادر أو المواقع اللي ممكن أتعلم منها اللغة الإنجليزية من الصفر وتكون مجانية؟ دورت كثير واحترت، ياريت اللي عندها تجربة تفيدني.
-                </div>
-                <div class="post-footer">
-                    <div class="interaction-btns">
-                        <button class="interact-btn"><i class="fa-regular fa-heart"></i> ١٥</button>
-                        <button class="interact-btn"><i class="fa-regular fa-comment"></i> ٨ تعليقات</button>
-                    </div>
-                    <button class="interact-btn" title="حفظ"><i class="fa-regular fa-bookmark"></i></button>
-                </div>
-            </div>
-
-            <!-- Load More -->
-            <div style="display: flex; justify-content: center; margin-top: 3rem;">
-                <button class="btn-outline" style="background: white;">تحميل المزيد من المحتوى <i class="fa-solid fa-chevron-down" style="margin-right:0.5rem;"></i></button>
-            </div>
-
-        </div>
-    </main>
+  </main>
 </div>
 
 <?php include 'includes/footer.php'; ?>
