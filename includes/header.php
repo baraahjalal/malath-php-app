@@ -1,6 +1,24 @@
 <?php
-  // Get current file name for active links
+  // نبدأ الجلسة في أعلى الهيدر لضمان توفرها في كل صفحات الموقع
+  if (session_status() === PHP_SESSION_NONE) {
+      session_start();
+  }
   $current_page = basename($_SERVER['PHP_SELF']);
+
+  // --- الجزء الجديد المضاف ---
+  $user_avatar = 'assets/images/default-avatar.png'; // الصورة الافتراضية
+  
+  if (isset($_SESSION['user_id'])) {
+      include 'includes/db.php'; // تأكدي من مسار ملف الاتصال
+      $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
+      $stmt->execute([$_SESSION['user_id']]);
+      $user_data = $stmt->fetch();
+      
+      if (!empty($user_data['avatar'])) {
+          $user_avatar = $user_data['avatar'];
+      }
+  }
+
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -28,13 +46,15 @@
         </div>
 
         <!-- User Actions -->
-        <div class="flex items-center gap-4">
-            <div style="position: relative;" id="notification-wrapper">
-                <button class="icon-button" id="notification-btn" style="position: relative;">
-                    <i class="fa-regular fa-bell" style="font-size: 1.25rem;"></i>
-                    <span class="notification-badge"></span>
-                </button>
-                <div class="notification-dropdown" id="notification-dropdown">
+    <div class="flex items-center gap-4">
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <!-- هذا الجزء يظهر فقط للمسجلات دخولهن -->
+        <div style="position: relative;" id="notification-wrapper">
+            <button class="icon-button" id="notification-btn">
+                <i class="fa-regular fa-bell" style="font-size: 1.25rem;"></i>
+                <span class="notification-badge"></span>
+            </button>
+             <div class="notification-dropdown" id="notification-dropdown">
                     <div class="notification-header">
                         <h4 class="font-headline font-bold" style="margin:0;">التنبيهات</h4>
                         <span style="font-size: 0.8rem; color: var(--primary); cursor: pointer;">تحديد الكل كمقروء</span>
@@ -64,11 +84,27 @@
                     </div>
                     <a href="#" class="notification-footer">عرض كل التنبيهات</a>
                 </div>
-            </div>
-            <a href="profile.php" class="profile-avatar">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx9oi_CffQzQD7xh703WXtQv5Ljs9d-NL5lYKUeMo6f_XnT7ObVTaLv7KUvY-Y6kgsX9iIBk2MHZeWFh2RE7cUrZtReZauD2YFdiksobrJkfQk1VBEJVSKk7cAOk1Mb32f_jcHEQ_sJxy_L9eQFMEuQPGC7zRbdt4roxItlcBpnzVrGB2m74yODejLFaGS0Mpw5VERpLn_CZf-VaZKdkFvIWXUJB1y-S-BniGp3pGOUz_EF2V-oxPWK6KDfKlqLnAdO9ZPq1-Qx_U" alt="Profile">
-            </a>
         </div>
+
+        <a href="profile.php" class="profile-avatar">
+            <!-- يمكنك لاحقاً عرض صورة المستخدم الحقيقية من الجلسة -->
+            <img src="<?= htmlspecialchars($user_avatar); ?>" alt="Profile">
+        </a>
+        
+        <!-- زر خروج اختياري -->
+      <!-- زر خروج يوجه لملف خارجي -->
+<a href="logout.php" title="تسجيل الخروج" style="color: var(--secondary);">
+    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+</a>
+
+    <?php else: ?>
+        <!-- هذا الجزء يظهر للزوار فقط -->
+        <div class="flex gap-2">
+            <a href="login.php?redirect=community.php" class="nav-link">تسجيل الدخول</a>
+            <a href="register.php" class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;">إنضمي إلينا</a>
+        </div>
+    <?php endif; ?>
+</div>
     </div>
 </nav>
 

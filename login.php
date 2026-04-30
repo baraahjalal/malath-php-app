@@ -1,4 +1,58 @@
-<?php include 'includes/header.php'; ?>
+<?php
+
+
+// 1. البدء بالجلسة مع فحص إذا كانت مبدوءة مسبقاً
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 2. الاتصال بقاعدة البيانات - تأكدي أن المسار صحيح
+include 'includes/db.php'; 
+
+
+
+// 3. إعادة التوجيه إذا كانت مسجلة دخول أصلاً
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+// تعريف المتغيرات لتجنب أخطاء Undefined Variable
+$error = '';
+$email = '';
+// في بداية ملف login.php، استقبلي الرابط المرجعي إذا وجد
+$redirect_to = $_GET['redirect'] ?? 'index.php';
+
+// 4. معالجة طلب تسجيل الدخول
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+
+    if (!empty($email) && !empty($password)) {
+        // استعلام قاعدة البيانات (تأكدي من أسماء الجداول لديكِ)
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+           // التوجيه للرابط المحفوظ بدلاً من الـ index دائماً
+    header("Location: " . $redirect_to);
+    exit;
+        } else {
+            $error = "خطأ في البريد الإلكتروني أو كلمة المرور.";
+        }
+    } else {
+        $error = "يرجى ملء جميع الحقول.";
+    }
+}
+
+
+
+// 5. التضمين يأتي بعد المنطق
+include 'includes/header.php'; 
+?>
 
 <style>
 /* Refined Login Layout */
@@ -167,22 +221,33 @@
 .separator span { padding: 0 1rem; font-size: 0.875rem; }
 </style>
 
+
 <div class="login-page-wrapper">
     <div class="login-glass-container animate-fade-in-up">
-        
-        <!-- Right Side: Form (Visual order reversed by CSS direction:rtl, so this appears on the right) -->
+        <!-- جانب النموذج -->
         <div class="login-form-side">
             <div class="form-wrapper">
                 <div class="form-header">
                     <h2>مرحباً بكِ مجدداً</h2>
                     <p style="color: var(--secondary);">سجلي دخولك لمتابعة رحلتك في ملاذ</p>
                 </div>
-                
+
+                <?php if ($error): ?>
+                <div class="alert alert-error" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:1rem;border-radius:8px;margin-bottom:12px;">
+                    <?php echo $error; ?>
+                </div>
+                <?php endif; ?>
+
                 <form action="login.php" method="POST">
                     <div class="input-group">
                         <label class="input-label">البريد الإلكتروني</label>
                         <div class="input-icon-wrapper">
-                            <input name="email" class="form-control" placeholder="example@malath.com" type="email" required>
+                            <input name="email"
+                                   class="form-control"
+                                   placeholder="example@malath.com"
+                                   type="email"
+                                   required
+                                   value="<?php echo htmlspecialchars($email); ?>">
                             <i class="fa-regular fa-envelope"></i>
                         </div>
                     </div>
@@ -190,46 +255,50 @@
                     <div class="input-group" style="margin-bottom: 1rem;">
                         <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
                             <label class="input-label" style="margin-bottom: 0;">كلمة المرور</label>
+                            <!-- يمكنك الربط لاحقاً مع صفحة استرجاع كلمة المرور -->
                             <a href="#" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600;">نسيتِ كلمة المرور؟</a>
                         </div>
                         <div class="input-icon-wrapper">
-                            <input name="password" class="form-control" placeholder="••••••••" type="password" required>
+                            <input name="password"
+                                   class="form-control"
+                                   placeholder="••••••••"
+                                   type="password"
+                                   required>
                             <i class="fa-solid fa-lock"></i>
                         </div>
                     </div>
                     
-                    <div class="flex items-center" style="gap: 0.5rem; margin-bottom: 2.5rem; margin-top: 1.5rem;">
-                        <input type="checkbox" id="remember" name="remember" class="checkbox-custom">
-                        <label for="remember" style="font-size: 0.9rem; color: var(--on-surface); cursor: pointer;">تذكريني دائماً</label>
-                    </div>
+                    <!-- تفعيل remember me لاحقاً (كوكيز)، الآن تجاهله -->
                     
                     <button type="submit" class="btn-primary" style="width: 100%;">تسجيل الدخول</button>
                 </form>
                 
                 <div class="separator"><span>أو</span></div>
-                
                 <div style="text-align: center;">
                     <p style="color: var(--secondary); margin-bottom: 1rem;">ليس لديكِ حساب بعد؟</p>
-                    <a href="register.php" class="btn-outline" style="display: block; text-decoration: none; text-align: center;">
+                    <a href="register.php" class="btn-outline" style="display: block;
+                            text-decoration: none;
+                            text-align: center;">
                         إنشاء حساب جديد
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Left Side: Editorial (Visual order left) -->
+        <!-- الجانب الجمالي (يمكن إبقاؤه كما هو أو تعديله) -->
         <div class="login-brand-side">
             <div class="brand-content">
                 <span class="badge" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); margin-bottom: 1.5rem;">
                     مساحة آمنة لكل امرأة
                 </span>
-                <h1 class="font-headline font-black" style="font-size: 4.5rem; line-height: 1.1; margin-bottom: 1.5rem; text-shadow: 0 4px 10px rgba(0,0,0,0.2);">ملاذ</h1>
-                <p style="font-size: 1.25rem; max-width: 28rem; line-height: 1.8; opacity: 0.9;">
-                    اكتشفي الهدوء، الأمان، والتمكين في مجتمعنا الرقمي المصمم خصيصاً ليكون رفيقك في رحلة النمو والتواصل الإيجابي.
+                <h1 class="font-headline font-black" style="font-size: 4.5rem; line-height: 1.1; margin-bottom: 1.5rem; text-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                    ملاذ
+                </h1>
+                <p style="font-size: 1.15rem; max-width: 28rem; line-height: 1.8; opacity: 0.9;">
+                    اكتشفي الهدوء، الأمان، والتمكين في مجتمعنا الرقمي المصمم خصيصاً ليكون رفيقك في رحلة النمو والتواصل.
                 </p>
             </div>
         </div>
-
     </div>
 </div>
 

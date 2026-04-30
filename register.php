@@ -1,7 +1,60 @@
-<?php include 'includes/header.php'; ?>
+<?php
+include 'includes/header.php';
+include 'includes/db.php';
+
+$error = '';
+$success = '';
+
+// تعريف المتغيرات فارغة في البداية لمنع ظهور أخطاء في الـ HTML
+$first_name = '';
+$last_name = '';
+$email = '';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $first_name = trim($_POST['first_name'] ?? '');
+    $last_name  = trim($_POST['last_name'] ?? '');
+    $email      = trim($_POST['email'] ?? '');
+    $password   = $_POST['password'] ?? '';
+
+    // 1. التحقق من الحقول
+    if ($first_name === "" || $last_name === "" || $email === "" || $password === "") {
+        $error = "جميع الحقول مطلوبة!";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "صيغة البريد الإلكتروني غير صحيحة!";
+    } elseif (strlen($password) < 6) {
+        $error = "كلمة المرور يجب أن تكون 6 أحرف أو أكثر.";
+    } else {
+        // 2. التحقق من تكرار البريد الإلكتروني
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if($stmt->fetchColumn() > 0) {
+            $error = "البريد الإلكتروني مستخدم بالفعل، يرجى استخدام بريد آخر.";
+        } else {
+            // 3. إدخال البيانات
+            $name = $first_name . ' ' . $last_name;
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            
+            try {
+                $insert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+                $result = $insert->execute([$name, $email, $password_hash]);
+                
+                if($result) {
+                    $success = "تم إنشاء الحساب بنجاح! سيتم توجيهك لصفحة الدخول...";
+                    // توجيه تلقائي بعد 3 ثواني لرؤية رسالة النجاح
+                 echo '<script>setTimeout(function(){ window.location.href = "login.php"; }, 3000);</script>';
+                } else {
+                    $error = "حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.";
+                }
+            } catch (PDOException $e) {
+                $error = "خطأ في قاعدة البيانات: " . $e->getMessage();
+            }
+        }
+    }
+}
+?>
 
 <style>
-/* Register Page Layout reusing login styles but adjusted */
+/* تجميع الستايل الخاص بك هنا */
 .login-page-wrapper {
   min-height: calc(100vh - 80px);
   display: flex;
@@ -26,17 +79,12 @@
 
 @media (min-width: 992px) {
   .login-glass-container {
-    /* Reverse order for variety */
     grid-template-columns: 1fr 1fr;
-    direction: ltr; /* Temporarily switch direction to place image on right side visually */
+    direction: ltr;
   }
-  
-  .login-glass-container > * {
-    direction: rtl; /* Reset internal direction */
-  }
+  .login-glass-container > * { direction: rtl; }
 }
 
-/* Right Side - Image & Branding */
 .login-brand-side {
   position: relative;
   background: var(--primary-container);
@@ -47,18 +95,7 @@
   overflow: hidden;
 }
 
-@media (min-width: 992px) {
-  .login-brand-side { display: flex; }
-}
-
-.login-brand-side::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: url('https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1480&auto=format&fit=crop') center/cover;
-  opacity: 0.8;
-  mix-blend-mode: multiply;
-}
+@media (min-width: 992px) { .login-brand-side { display: flex; } }
 
 .login-brand-side::after {
   content: '';
@@ -67,13 +104,8 @@
   background: linear-gradient(135deg, rgba(155,98,112,0.8) 0%, rgba(197,58,98,0.9) 100%);
 }
 
-.brand-content {
-  position: relative;
-  z-index: 10;
-  color: white;
-}
+.brand-content { position: relative; z-index: 10; color: white; }
 
-/* Left Side - Form */
 .login-form-side {
   padding: 2rem 1.5rem;
   background-color: rgba(255, 255, 255, 0.9);
@@ -82,50 +114,33 @@
   justify-content: center;
 }
 
-@media (min-width: 768px) {
-  .login-form-side { padding: 3rem 3.5rem; }
-}
+.form-header { text-align: center; margin-bottom: 2rem; }
+.form-header h2 { color: var(--primary-dark); font-weight: 800; }
 
-.form-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
+.form-wrapper { max-width: 400px; margin: 0 auto; width: 100%; }
 
-.form-header h2 {
-  font-family: var(--font-headline);
-  font-size: 2.25rem;
-  color: var(--primary-dark);
-  font-weight: 800;
-  margin-bottom: 0.5rem;
+.alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
 }
+.alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 
-.form-wrapper {
-  max-width: 400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.input-icon-wrapper {
-  position: relative;
-}
-
+.input-icon-wrapper { position: relative; }
 .input-icon-wrapper i {
   position: absolute;
   right: 1.25rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--secondary);
-  transition: var(--transition-fast);
 }
+.input-icon-wrapper .form-control { padding-right: 3rem; }
 
-.input-icon-wrapper .form-control {
-  padding-right: 3rem;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.input-icon-wrapper .form-control:focus + i {
-  color: var(--primary);
-}
+.form-row { display: flex; gap: 1rem; }
+.form-row .input-group { width: 100%; }
 
 .separator {
   display: flex;
@@ -134,60 +149,57 @@
   color: var(--outline);
   margin: 1.5rem 0;
 }
-
-.separator::before, .separator::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--outline-variant);
-}
-
-.separator span { padding: 0 1rem; font-size: 0.875rem; }
-
-.form-row {
-  display: flex;
-  gap: 1rem;
-}
-.form-row .input-group { width: 100%; }
+.separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid var(--outline-variant); }
+.separator span { padding: 0 1rem; }
 </style>
 
 <div class="login-page-wrapper">
     <div class="login-glass-container animate-fade-in-up">
         
-        <!-- Image Side -->
+        <!-- الجانب الجمالي -->
         <div class="login-brand-side">
             <div class="brand-content">
-                <span class="badge" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); margin-bottom: 1.5rem;">
+                <span class="badge" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); margin-bottom: 1.5rem; padding: 5px 15px; border-radius: 20px;">
                     انضمي لعائلتنا
                 </span>
-                <h1 class="font-headline font-black" style="font-size: 3.5rem; line-height: 1.2; margin-bottom: 1.5rem; text-shadow: 0 4px 10px rgba(0,0,0,0.2);">بداية جديدة <br>نحو الأفضل</h1>
-                <p style="font-size: 1.15rem; max-width: 25rem; line-height: 1.8; opacity: 0.9;">
+                <h1 style="font-size: 3rem; line-height: 1.2; margin-bottom: 1.5rem;">بداية جديدة <br>نحو الأفضل</h1>
+                <p style="opacity: 0.9; line-height: 1.8;">
                     أنشئي حسابك الآن وكوني جزءاً من مجتمع إيجابي وداعم، حيث تجدين المساحة للتعبير، التعلم، والنمو.
                 </p>
             </div>
         </div>
         
-        <!-- Form Side -->
+        <!-- جانب النموذج -->
         <div class="login-form-side">
             <div class="form-wrapper">
                 <div class="form-header">
                     <h2>إنشاء حساب جديد</h2>
                     <p style="color: var(--secondary);">الخطوة الأولى في رحلتك معنا</p>
                 </div>
+
+                <!-- عرض رسائل الخطأ والنجاح -->
+                <?php if ($error): ?>
+                    <div class="alert alert-error"><?php echo $error; ?></div>
+                <?php endif; ?>
+
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?php echo $success; ?></div>
+                <?php endif; ?>
                 
                 <form action="register.php" method="POST">
-                    
                     <div class="form-row">
                         <div class="input-group">
                             <label class="input-label">الاسم الأول</label>
                             <div class="input-icon-wrapper">
-                                <input name="first_name" class="form-control" placeholder="مثال: سارة" type="text" required>
+                                <!-- htmlspecialchars تحمي الموقع من الاختراق وتُرجع القيمة التي كتبها المستخدم -->
+                                <input name="first_name" value="<?php echo htmlspecialchars($first_name); ?>" class="form-control" placeholder="مثال: سارة" type="text" required>
                                 <i class="fa-regular fa-user"></i>
                             </div>
                         </div>
                         <div class="input-group">
                             <label class="input-label">اسم العائلة</label>
                             <div class="input-icon-wrapper">
-                                <input name="last_name" class="form-control" placeholder="مثال: أحمد" type="text" required>
+                                <input name="last_name" value="<?php echo htmlspecialchars($last_name); ?>" class="form-control" placeholder="مثال: أحمد" type="text" required>
                                 <i class="fa-regular fa-user"></i>
                             </div>
                         </div>
@@ -196,7 +208,7 @@
                     <div class="input-group">
                         <label class="input-label">البريد الإلكتروني</label>
                         <div class="input-icon-wrapper">
-                            <input name="email" class="form-control" placeholder="example@malath.com" type="email" required>
+                            <input name="email" value="<?php echo htmlspecialchars($email); ?>" class="form-control" placeholder="example@malath.com" type="email" required>
                             <i class="fa-regular fa-envelope"></i>
                         </div>
                     </div>
@@ -209,14 +221,16 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">إنشاء الحساب</button>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem; background-color: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; cursor: pointer;">
+                        إنشاء الحساب
+                    </button>
                 </form>
                 
                 <div class="separator"><span>أو</span></div>
                 
                 <div style="text-align: center;">
                     <p style="color: var(--secondary); margin-bottom: 1rem;">أتمتلكين حساباً مسبقاً؟</p>
-                    <a href="login.php" class="btn-outline" style="display: block; text-decoration: none; text-align: center;">
+                    <a href="login.php" class="btn-outline" style="display: block; text-decoration: none; text-align: center; color: var(--primary); border: 1px solid var(--primary); padding: 10px; border-radius: 10px;">
                         تسجيل الدخول
                     </a>
                 </div>

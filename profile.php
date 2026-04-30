@@ -1,38 +1,57 @@
 <?php
-$current_page = 'profile.php';
+include 'includes/db.php'; 
 include 'includes/header.php';
+
+// 1. حماية الصفحة: إذا لم تكن مسجلة دخول، يتم توجيهها للـ Login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
+// 2. جلب بيانات المستخدمة الحقيقية من قاعدة البيانات
+$user_id = $_SESSION['user_id'];
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch();
+
+// 3. (اختياري) جلب عدد المساهمات أو العناصر المحفوظة لاحقاً من جداولها الخاصة
+$contributions_count = 12; // رقم تجريبي حالياً حتى تبرمجي جدول المنشورات
 ?>
 
 <!-- Profile Header Section -->
 <section class="profile-header-section">
-    <!-- Cover Image -->
     <div class="profile-cover">
+        <!-- غلاف افتراضي أنيق لملاذ -->
         <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop" alt="Cover">
-        <!-- Overlay -->
         <div class="cover-overlay"></div>
     </div>
     
     <div class="container relative">
-        <div class="profile-info-card">
+        <div class="profile-info-card animate-fade-in-up">
             <div class="profile-avatar-large">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx9oi_CffQzQD7xh703WXtQv5Ljs9d-NL5lYKUeMo6f_XnT7ObVTaLv7KUvY-Y6kgsX9iIBk2MHZeWFh2RE7cUrZtReZauD2YFdiksobrJkfQk1VBEJVSKk7cAOk1Mb32f_jcHEQ_sJxy_L9eQFMEuQPGC7zRbdt4roxItlcBpnzVrGB2m74yODejLFaGS0Mpw5VERpLn_CZf-VaZKdkFvIWXUJB1y-S-BniGp3pGOUz_EF2V-oxPWK6KDfKlqLnAdO9ZPq1-Qx_U" alt="Profile Picture">
-                <button class="edit-avatar-btn"><i class="fa-solid fa-camera"></i></button>
+                <!-- عرض الصورة الشخصية أو صورة افتراضية -->
+<img src="<?= !empty($user['avatar']) ? $user['avatar'] : 'assets/images/default-avatar.png'; ?>" alt="Profile Picture">                <button class="edit-avatar-btn" onclick="alert('قريباً: رفع الصور الشخصية')">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
             </div>
             
             <div class="profile-details flex justify-between items-center w-full">
                 <div>
-                    <h1 class="font-headline font-black text-primary-dark" style="font-size: 2rem; margin-bottom: 0.25rem;">براءة عريبي</h1>
-                    <p class="text-secondary" style="font-size: 1.1rem;">baraahjalall@email.com</p>
-                    <p style="color: var(--on-surface); max-width: 600px; margin-top: 0.75rem; line-height: 1.6;">
-                        شغوفة بتطوير الذات والكتابة في مجال الصحة النفسية، أطمح دائماً لمشاركة ما أتعلمه مع مجتمع ملاذ الجميل لنرتقي معاً.
+                    <h1 class="font-headline font-black text-primary-dark" style="font-size: 2.2rem; margin-bottom: 0.25rem;">
+                        <?= htmlspecialchars($user['name']); ?>
+                    </h1>
+                    <p class="text-secondary" style="font-size: 1.1rem;"><?= htmlspecialchars($user['email']); ?></p>
+                    <p id="user-bio-display" style="color: var(--on-surface); max-width: 600px; margin-top: 0.75rem; line-height: 1.6;">
+                        <?= !empty($user['bio']) ? htmlspecialchars($user['bio']) : "مرحباً بكِ في مساحتكِ الخاصة في ملاذ. يمكنكِ إضافة نبذة عنكِ من الإعدادات."; ?>
                     </p>
                 </div>
-                <div class="hidden-mobile" style="display: flex; gap: 1rem;">
+                
+                <div class="hidden-mobile" style="display: flex; gap: 1.5rem; background: var(--surface-container-low); padding: 1rem 2rem; border-radius: 1.5rem;">
                     <div style="text-align: center;">
-                        <span class="font-headline font-bold text-primary" style="font-size: 1.5rem; display: block;">١٢</span>
+                        <span class="font-headline font-bold text-primary" style="font-size: 1.5rem; display: block;"><?= $contributions_count; ?></span>
                         <span style="font-size: 0.85rem; color: var(--secondary);">مساهمة</span>
                     </div>
-                    <div style="width: 1px; background-color: var(--outline-variant); margin: 0 0.5rem;"></div>
+                    <div style="width: 1px; background-color: var(--outline-variant);"></div>
                     <div style="text-align: center;">
                         <span class="font-headline font-bold text-primary" style="font-size: 1.5rem; display: block;">٤٥</span>
                         <span style="font-size: 0.85rem; color: var(--secondary);">محفوظة</span>
@@ -47,128 +66,115 @@ include 'includes/header.php';
 <section style="background-color: #FFFFFF; border-bottom: 1px solid var(--outline-variant); position: sticky; top: 4.5rem; z-index: 30; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
     <div class="container">
         <div class="profile-tabs flex gap-8">
-            <button class="profile-tab active" data-tab="personal-info">المعلومات الشخصية</button>
-            <button class="profile-tab" data-tab="contributions">مساهماتي</button>
-            <button class="profile-tab" data-tab="saved-items">عناصري المحفوظة</button>
+            <button class="profile-tab active" onclick="switchTab('personal-info')">إعدادات الحساب</button>
+            <button class="profile-tab" onclick="switchTab('contributions')">نشاطاتي في المجتمع</button>
+            <button class="profile-tab" onclick="switchTab('saved-items')">المكتبة الخاصة</button>
         </div>
     </div>
 </section>
 
 <!-- Profile Body -->
-<section style="padding: 4rem 0; min-height: 50vh;">
+<section style="padding: 3rem 0; min-height: 60vh; background-color: var(--surface);">
     <div class="container">
-        <!-- Tab 1: Personal Info -->
+        
+        <!-- Tab 1: Personal Info & Settings -->
         <div class="tab-content active animate-fade-in-up" id="personal-info">
-            <div class="card" style="max-width: 800px; margin: 0 auto;">
-                <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--outline-variant); padding-bottom: 1rem;">البيانات الأساسية</h3>
+            <div class="card" style="max-width: 800px; margin: 0 auto; border-radius: 2rem;">
+                <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.4rem; margin-bottom: 1.5rem;">تعديل الملف الشخصي</h3>
                 
-                <form>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                        <div class="input-group">
-                            <label class="input-label">الاسم الأول</label>
-                            <input type="text" class="form-control" value="براءة">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">الاسم الأخير</label>
-                            <input type="text" class="form-control" value="عريبي">
-                        </div>
+                <!-- سنوجه الفورم لنفس الصفحة لمعالجة التحديث لاحقاً -->
+                <form action="update_profile.php" method="POST" enctype="multipart/form-data">
+
+<!-- قسم الصورة الشخصية داخل الفورم -->
+    <div class="profile-avatar-large" style="margin-bottom: 2rem;">
+        <img src="<?= !empty($user['avatar']) ? $user['avatar'] : 'assets/images/default-avatar.png'; ?>" id="avatar-preview" alt="Profile">
+        
+        <!-- حقل اختيار الملف مخفي ويتم تفعيله بالضغط على الأيقونة -->
+        <input type="file" name="profile_image" id="profile_image_input" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="previewImage(this)">
+        
+        <button type="button" class="edit-avatar-btn" onclick="document.getElementById('profile_image_input').click()">
+            <i class="fa-solid fa-camera"></i>
+        </button>
+    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">الاسم الكامل</label>
+                        <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($user['name']); ?>" required>
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">البريد الإلكتروني</label>
-                        <input type="email" class="form-control" value="baraahjalall@email.com" dir="ltr" style="text-align: right;">
+                        <label class="input-label">البريد الإلكتروني (لا يمكن تغييره حالياً)</label>
+                        <input type="email" class="form-control" value="<?= htmlspecialchars($user['email']); ?>" disabled style="background-color: var(--surface-container-high);">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">نبذة عني (السيرة الذاتية)</label>
-                        <textarea class="form-control" rows="4">شغوفة بتطوير الذات والكتابة في مجال الصحة النفسية، أطمح دائماً لمشاركة ما أتعلمه مع مجتمع ملاذ الجميل لنرتقي معاً.</textarea>
+                        <label class="input-label">نبذة عني (سيظهر في المجتمع)</label>
+                        <textarea name="bio" class="form-control" rows="3" placeholder="اكتبي شيئاً عن نفسكِ..."><?= htmlspecialchars($user['bio'] ?? ''); ?></textarea>
                     </div>
 
-                    <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.5rem; margin: 3rem 0 2rem; border-bottom: 1px solid var(--outline-variant); padding-bottom: 1rem;">تغيير كلمة المرور</h3>
+                    <div style="border-top: 1px dashed var(--outline-variant); margin: 2rem 0;"></div>
                     
-                    <div class="input-group">
-                        <label class="input-label">كلمة المرور الحالية</label>
-                        <input type="password" class="form-control" placeholder="••••••••">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.2rem; margin-bottom: 1rem;">تأمين الحساب</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="input-group">
-                            <label class="input-label">كلمة المرور الجديدة</label>
-                            <input type="password" class="form-control" placeholder="••••••••">
+                            <label class="input-label">كلمة مرور جديدة</label>
+                            <input type="password" name="new_password" class="form-control" placeholder="اتركيه فارغاً إذا لا ترغبين بالتغيير">
                         </div>
                         <div class="input-group">
-                            <label class="input-label">تأكيد كلمة المرور الجديدة</label>
-                            <input type="password" class="form-control" placeholder="••••••••">
+                            <label class="input-label">تأكيد كلمة المرور</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="أعيدي كتابتها">
                         </div>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" class="btn-primary">حفظ التعديلات</button>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 2rem; gap: 1rem;">
+                         <button type="submit" class="btn-primary" style="padding: 0.8rem 2.5rem;">تحديث البيانات</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Tab 2: Contributions -->
-        <div class="tab-content" id="contributions">
-            <div class="card animate-fade-in-up" style="max-width: 800px; margin: 0 auto; background: transparent; border: none; box-shadow: none; padding: 0;">
-                
-                <!-- Sample Post 1 -->
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-4 text-primary font-bold">
-                            <i class="fa-solid fa-comments"></i> رد في مجتمع "السكينة"
-                        </div>
-                        <span class="notification-time">١٢ أكتوبر ٢٠٢٤</span>
-                    </div>
-                    <p style="color: var(--on-surface); line-height: 1.7;">
-                        أعتقد أن التدوين اليومي لمشاعرك قبل النوم يساعد جداً في تصفية الذهن. جربتها شخصياً وفرقت معي كثيراً.
-                    </p>
-                </div>
-
-                <!-- Sample Post 2 -->
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-4 text-primary font-bold">
-                            <i class="fa-solid fa-file-lines"></i> مقال منشور
-                        </div>
-                        <span class="notification-time">٥ سبتمبر ٢٠٢٤</span>
-                    </div>
-                    <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.25rem;">رحلة التعافي والنمو</h3>
-                    <p style="color: var(--on-surface); line-height: 1.7; margin-top: 0.5rem;">
-                        كل إنسان يمر في حياته بلحظات يشعر فيها بالتوقف، لكن الحقيقة أن هذه اللحظات هي فترات استعداد لانطلاقة أعمق...
-                    </p>
-                    <a href="article.php" style="color: var(--primary); text-decoration: none; font-weight: bold; display: inline-block; margin-top: 1rem;">قراءة المقال</a>
-                </div>
-
+        <!-- Tab 2: Contributions (Placeholder) -->
+        <div class="tab-content" id="contributions" style="display:none;">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center; padding: 4rem 0;">
+                <i class="fa-solid fa-feather-pointed" style="font-size: 3rem; color: var(--outline-variant); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--secondary);">لم تقومي بنشر أي منشورات بعد.</h3>
+                <a href="community.php" class="btn-outline" style="margin-top: 1rem; display: inline-block;">اذهبي للمجتمع وشاركي الآن</a>
             </div>
         </div>
 
-        <!-- Tab 3: Saved Items -->
-        <div class="tab-content" id="saved-items">
-             <div class="animate-fade-in-up" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-                
-                <!-- Saved Article 1 -->
-                <div class="card" style="padding: 1.5rem; position: relative;">
-                    <button class="icon-button" style="position: absolute; top: 1rem; left: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);"><i class="fa-solid fa-bookmark" style="color: var(--primary);"></i></button>
-                    <span class="badge" style="margin-bottom: 1rem; border: none;">صحتكِ أولاً</span>
-                    <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.2rem; margin-bottom: 0.5rem;">أفضل ٥ عادات صباحية لزيادة الإنتاجية</h3>
-                    <p class="notification-time" style="margin-bottom: 1rem;">بواسطة: د. ريم فهد</p>
-                    <a href="article.php" style="color: var(--primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">اقرئي الآن <i class="fa-solid fa-arrow-left" style="font-size: 0.8rem;"></i></a>
-                </div>
-
-                <!-- Saved Article 2 -->
-                <div class="card" style="padding: 1.5rem; position: relative;">
-                    <button class="icon-button" style="position: absolute; top: 1rem; left: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);"><i class="fa-solid fa-bookmark" style="color: var(--primary);"></i></button>
-                    <span class="badge" style="margin-bottom: 1rem; border: none;">طموحكِ بلا حدود</span>
-                    <h3 class="font-headline font-bold text-primary-dark" style="font-size: 1.2rem; margin-bottom: 0.5rem;">كيف تبنين علامة تجارية شخصية قوية</h3>
-                    <p class="notification-time" style="margin-bottom: 1rem;">بواسطة: نورة إبراهيم</p>
-                    <a href="article.php" style="color: var(--primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">اقرئي الآن <i class="fa-solid fa-arrow-left" style="font-size: 0.8rem;"></i></a>
-                </div>
-
-             </div>
-        </div>
-        
     </div>
 </section>
+
+<script>
+
+
+// كود بسيط لعرض الصورة فور اختيارها من الجهاز وقبل الرفع
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatar-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// وظيفة بسيطة للتنقل بين التبويبات بدون تحميل الصفحة
+function switchTab(tabId) {
+    // إخفاء كل المحتويات
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    // إزالة الصف الفعال من الأزرار
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // إظهار المحتوى المختار
+    document.getElementById(tabId).style.display = 'block';
+    // تفعيل الزر المختار
+    event.currentTarget.classList.add('active');
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
