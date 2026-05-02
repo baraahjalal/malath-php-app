@@ -271,7 +271,7 @@
             </p>
             
             <div class="flex gap-4 animate-fade-in-up delay-300" style="flex-wrap: wrap; margin-top: 2rem;">
-                <a href="register.php" class="btn-primary" style="text-decoration: none; padding: 12px 30px; font-size: 1.1rem;">ابدئي رحلتكِ الآن</a>
+                <a href="community.php" class="btn-primary" style="text-decoration: none; padding: 12px 30px; font-size: 1.1rem;">ابدئي رحلتكِ الآن</a>
                 <a href="about.php" class="btn-outline" style="text-decoration: none; padding: 12px 30px; font-size: 1.1rem;">اكتشفي برامجنا</a>
             </div>
         </div>
