@@ -2,12 +2,11 @@
 
 
 // 1. البدء بالجلسة مع فحص إذا كانت مبدوءة مسبقاً
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/csrf.php';
+csrf_generate();
 
-// 2. الاتصال بقاعدة البيانات - تأكدي أن المسار صحيح
-include 'includes/db.php'; 
+include 'includes/db.php';
 
 
 
@@ -20,11 +19,17 @@ if (isset($_SESSION['user_id'])) {
 // تعريف المتغيرات لتجنب أخطاء Undefined Variable
 $error = '';
 $email = '';
-// في بداية ملف login.php، استقبلي الرابط المرجعي إذا وجد
-$redirect_to = $_GET['redirect'] ?? 'index.php';
+// قائمة الصفحات الداخلية المسموح بالتوجيه إليها
+$allowed_redirects = [
+    'index.php', 'community.php', 'profile.php',
+    'article.php', 'about.php', 'faq.php',
+];
+$raw_redirect  = $_GET['redirect'] ?? 'index.php';
+$redirect_to   = in_array($raw_redirect, $allowed_redirects, true) ? $raw_redirect : 'index.php';
 
 // 4. معالجة طلب تسجيل الدخول
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    csrf_verify();
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
@@ -35,11 +40,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
+            session_regenerate_id(true);
+            $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['name'];
-           // التوجيه للرابط المحفوظ بدلاً من الـ index دائماً
-    header("Location: " . $redirect_to);
-    exit;
+            $_SESSION['user_role'] = $user['role'] ?? 'user';
+            $dest = ($_SESSION['user_role'] === 'admin') ? 'dashboard.php' : $redirect_to;
+            header("Location: " . $dest);
+            exit;
         } else {
             $error = "خطأ في البريد الإلكتروني أو كلمة المرور.";
         }
@@ -239,6 +246,7 @@ include 'includes/header.php';
                 <?php endif; ?>
 
                 <form action="login.php" method="POST">
+                    <?php csrf_field(); ?>
                     <div class="input-group">
                         <label class="input-label">البريد الإلكتروني</label>
                         <div class="input-icon-wrapper">

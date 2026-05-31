@@ -1,8 +1,7 @@
 <?php
-  // نبدأ الجلسة في أعلى الهيدر لضمان توفرها في كل صفحات الموقع
-  if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-  }
+  if (session_status() === PHP_SESSION_NONE) session_start();
+  require_once 'includes/csrf.php';
+  csrf_generate();
   $current_page = basename($_SERVER['PHP_SELF']);
 
   // --- الجزء الجديد المضاف ---
@@ -41,50 +40,86 @@
         <div class="hidden-mobile flex items-center gap-10 font-headline">
             <a href="index.php" class="nav-link <?php echo ($current_page == 'index.php' || $current_page == '') ? 'active' : ''; ?>">الرئيسية</a>
             <a href="community.php" class="nav-link <?php echo ($current_page == 'community.php') ? 'active' : ''; ?>">المجتمع</a>
-            <a href="article.php" class="nav-link <?php echo ($current_page == 'article.php') ? 'active' : ''; ?>">المقالات</a>
+            <a href="articles.php" class="nav-link <?php echo in_array($current_page, ['articles.php','article.php','articles-single.php']) ? 'active' : ''; ?>">المقالات</a>
             <a href="about.php" class="nav-link <?php echo ($current_page == 'about.php') ? 'active' : ''; ?>">من نحن</a>
         </div>
 
         <!-- User Actions -->
     <div class="flex items-center gap-4">
     <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- هذا الجزء يظهر فقط للمسجلات دخولهن -->
+        <!-- الإشعارات — يُحمَّل بـ AJAX -->
         <div style="position: relative;" id="notification-wrapper">
             <button class="icon-button" id="notification-btn">
                 <i class="fa-regular fa-bell" style="font-size: 1.25rem;"></i>
-                <span class="notification-badge"></span>
+                <span class="notification-badge" id="notif-badge" style="display:none;"></span>
             </button>
-             <div class="notification-dropdown" id="notification-dropdown">
-                    <div class="notification-header">
-                        <h4 class="font-headline font-bold" style="margin:0;">التنبيهات</h4>
-                        <span style="font-size: 0.8rem; color: var(--primary); cursor: pointer;">تحديد الكل كمقروء</span>
-                    </div>
-                    <div class="notification-list">
-                        <div class="notification-item unread">
-                            <div class="notification-icon"><i class="fa-solid fa-heart"></i></div>
-                            <div class="notification-content">
-                                <p>أعجبت سارة بمقالك "رحلة التعافي والنمو"</p>
-                                <span class="notification-time">منذ ٥ دقائق</span>
-                            </div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-icon"><i class="fa-solid fa-comment-dots"></i></div>
-                            <div class="notification-content">
-                                <p>هناك رد جديد على استفسارك في مجتمع السكينة</p>
-                                <span class="notification-time">منذ ساعتين</span>
-                            </div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-icon"><i class="fa-solid fa-star"></i></div>
-                            <div class="notification-content">
-                                <p>أهلاً بكِ في ملاذ! اكتشفي المساحات المصممة خصيصاً لكِ.</p>
-                                <span class="notification-time">منذ يوم</span>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#" class="notification-footer">عرض كل التنبيهات</a>
+            <div class="notification-dropdown" id="notification-dropdown">
+                <div class="notification-header">
+                    <h4 class="font-headline font-bold" style="margin:0;">التنبيهات</h4>
+                    <span id="mark-all-read" style="font-size:0.8rem;color:var(--primary);cursor:pointer;">تحديد الكل كمقروء</span>
                 </div>
+                <div class="notification-list" id="notif-list">
+                    <div style="text-align:center;padding:1.5rem;color:var(--secondary);font-size:.9rem;">جاري التحميل...</div>
+                </div>
+                <a href="community.php" class="notification-footer">الذهاب للمجتمع</a>
+            </div>
         </div>
+        <script>
+        (function(){
+            const CSRF = '<?= htmlspecialchars(csrf_generate()) ?>';
+            const btn  = document.getElementById('notification-btn');
+            const drop = document.getElementById('notification-dropdown');
+            const list = document.getElementById('notif-list');
+            const badge= document.getElementById('notif-badge');
+            let loaded = false;
+
+            async function loadNotifs() {
+                const res  = await fetch('api/notifications.php?action=fetch');
+                const data = await res.json();
+                if (!data.success) return;
+                badge.style.display = data.unread > 0 ? 'inline-block' : 'none';
+                badge.textContent   = data.unread > 9 ? '9+' : data.unread;
+                if (!data.notifications.length) {
+                    list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--secondary);font-size:.9rem;">لا توجد إشعارات بعد.</div>';
+                    return;
+                }
+                list.innerHTML = data.notifications.map(n => `
+                    <div class="notification-item ${n.is_read ? '' : 'unread'}">
+                        <div class="notification-icon"><i class="fa-solid ${n.icon}"></i></div>
+                        <div class="notification-content">
+                            <p><strong>${n.actor_name}</strong> ${n.label}</p>
+                            <span class="notification-time">${n.time}</span>
+                        </div>
+                    </div>`).join('');
+            }
+
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault(); e.stopPropagation();
+                drop.classList.toggle('active');
+                if (drop.classList.contains('active') && !loaded) {
+                    await loadNotifs(); loaded = true;
+                }
+            });
+
+            document.getElementById('mark-all-read').addEventListener('click', async () => {
+                const fd = new FormData();
+                await fetch('api/notifications.php?action=mark_read', {
+                    method: 'POST', body: fd,
+                    headers: { 'X-CSRF-Token': CSRF }
+                });
+                badge.style.display = 'none';
+                list.querySelectorAll('.notification-item').forEach(el => el.classList.remove('unread'));
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!drop.contains(e.target) && e.target !== btn) drop.classList.remove('active');
+            });
+
+            // فحص دوري كل 60 ثانية
+            loadNotifs();
+            setInterval(loadNotifs, 60000);
+        })();
+        </script>
 
         <a href="profile.php" class="profile-avatar" title="ملفي الشخصي">
             <img src="<?= htmlspecialchars($user_avatar); ?>" alt="Profile">

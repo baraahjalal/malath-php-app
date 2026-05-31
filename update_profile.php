@@ -1,15 +1,13 @@
 <?php
 include 'includes/db.php';
-session_start();
-
-// تفعيل عرض الأخطاء للتأكد من سبب المشكلة
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/csrf.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
+    csrf_verify();
     $user_id = $_SESSION['user_id'];
-    $name = $_POST['name'];
-    $bio = $_POST['bio'];
+    $name = trim($_POST['name'] ?? '');
+    $bio  = trim($_POST['bio']  ?? '');
     $avatar_path = null;
 
     // 1. معالجة الصورة
@@ -32,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $target_file)) {
                 $avatar_path = $target_file;
             } else {
-                die("خطأ: فشل نقل الملف للمجلد. تأكدي من صلاحيات المجلد.");
+                error_log("Avatar upload failed for user $user_id");
+                header("Location: profile.php?status=upload_error");
+                exit;
             }
         }
     }
@@ -53,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         header("Location: profile.php?status=updated");
         exit;
     } catch (PDOException $e) {
-        die("خطأ في قاعدة البيانات: " . $e->getMessage());
+        error_log("Profile update error: " . $e->getMessage());
+        header("Location: profile.php?status=error");
+        exit;
     }
 }

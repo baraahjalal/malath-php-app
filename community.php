@@ -3,6 +3,8 @@
 
 // 1) إعداد الجلسة وربط قاعدة البيانات
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/csrf.php';
+csrf_generate();
 include 'includes/db.php';
 
 // ==== المتغيرات العامة ==== //
@@ -13,6 +15,7 @@ $current_slug = $_GET['c'] ?? 'all';
 
 // ==== معالجة أزرار الانضمام/الانسحاب ==== //
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user_id) {
+    csrf_verify();
     // انضمام
     if (isset($_POST['join_community']) && isset($_POST['community_id'])) {
         $st = $pdo->prepare("INSERT IGNORE INTO user_communities(user_id, community_id) VALUES(?, ?)");
@@ -580,6 +583,7 @@ $posts = $st->fetchAll();
           </a>
           <?php if($user_id): ?>
             <form method="post" style="display:inline;">
+              <?php csrf_field(); ?>
               <input type="hidden" name="community_id" value="<?=$c['id']?>">
               <?php if (!in_array($c['id'], $user_communities)): ?>
                 <button type="submit" name="join_community" class="btn-join">انضمام</button>
@@ -629,6 +633,7 @@ $posts = $st->fetchAll();
           <div class="post-success-msg"><i class="fa-solid fa-circle-check"></i> <?=htmlspecialchars($post_message)?></div>
         <?php endif; ?>
         <form method="post">
+          <?php csrf_field(); ?>
           <div class="create-post-top">
             <img src="<?=htmlspecialchars($user_avatar ?? 'assets/images/default-avatar.png')?>" alt="Profile" class="user-avatar" style="width:3rem;height:3rem;">
             <textarea name="content" class="create-post-input" required placeholder="بم تفكرين؟ شاركي أفكارك، أسئلتك، أو تجربتك هنا..."></textarea>
@@ -700,35 +705,39 @@ $posts = $st->fetchAll();
             <?php endif;?>
             <div class="post-content"><?=nl2br(htmlspecialchars($post['content']))?></div>
             
-            <!-- شريط التفاعل -->
+            <!-- شريط التفاعل — AJAX -->
             <div class="post-interaction-bar" style="display:flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--outline-variant);">
                 <div style="display:flex; gap: 1rem;">
-                    <form method="POST" style="margin:0;">
-                        <input type="hidden" name="post_id" value="<?=$post['id']?>">
-                        <button type="submit" name="toggle_like" class="interaction-btn <?= $post['is_liked'] ? 'active-like' : '' ?>">
-                            <i class="<?= $post['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
-                            <span><?= $post['likes_count'] ?> إعجاب</span>
-                        </button>
-                    </form>
+                    <button type="button"
+                        class="interaction-btn <?= $post['is_liked'] ? 'active-like' : '' ?>"
+                        id="like-btn-<?=$post['id']?>"
+                        data-post="<?=$post['id']?>"
+                        onclick="ajaxLike(this)"
+                        <?= !$user_id ? 'onclick="location.href=\'login.php\'"' : '' ?>>
+                        <i class="<?= $post['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
+                        <span id="like-count-<?=$post['id']?>"><?= $post['likes_count'] ?> إعجاب</span>
+                    </button>
                     <button type="button" class="interaction-btn" onclick="toggleComments(<?=$post['id']?>)">
                         <i class="fa-regular fa-comment"></i>
-                        <span><?= $post['comments_count'] ?> تعليق</span>
+                        <span id="comment-count-<?=$post['id']?>"><?= $post['comments_count'] ?> تعليق</span>
                     </button>
                 </div>
-                <form method="POST" style="margin:0;">
-                    <input type="hidden" name="post_id" value="<?=$post['id']?>">
-                    <button type="submit" name="toggle_save" class="interaction-btn <?= $post['is_saved'] ? 'active-save' : '' ?>">
-                        <i class="<?= $post['is_saved'] ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
-                        <span><?= $post['is_saved'] ? 'مُحفوظ' : 'حفظ' ?></span>
-                    </button>
-                </form>
+                <button type="button"
+                    class="interaction-btn <?= $post['is_saved'] ? 'active-save' : '' ?>"
+                    id="save-btn-<?=$post['id']?>"
+                    data-post="<?=$post['id']?>"
+                    onclick="ajaxSave(this)"
+                    <?= !$user_id ? 'onclick="location.href=\'login.php\'"' : '' ?>>
+                    <i class="<?= $post['is_saved'] ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
+                    <span id="save-label-<?=$post['id']?>"><?= $post['is_saved'] ? 'مُحفوظ' : 'حفظ' ?></span>
+                </button>
             </div>
 
             <!-- منطقة التعليقات -->
             <div id="comments-section-<?=$post['id']?>" style="display: none; margin-top: 1rem; background-color: var(--surface-container-high); padding: 1.5rem; border-radius: 1.5rem;">
-                <!-- List Comments -->
+                <div id="comments-list-<?=$post['id']?>">
                 <?php if(!$comments): ?>
-                    <p style="color: var(--secondary); font-size: 0.9rem; text-align: center; margin-bottom: 1rem;">لا توجد تعليقات بعد. كوني أول من يعلق!</p>
+                    <p class="no-comments-msg" style="color: var(--secondary); font-size: 0.9rem; text-align: center; margin-bottom: 1rem;">لا توجد تعليقات بعد. كوني أول من يعلق!</p>
                 <?php else: ?>
                     <?php foreach($comments as $comm): ?>
                         <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
@@ -743,17 +752,16 @@ $posts = $st->fetchAll();
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                
-                <!-- Add Comment Form -->
+                </div>
+
                 <?php if($user_id): ?>
-                <form method="POST" style="display: flex; gap: 0.8rem; margin-top: 1.5rem; align-items: flex-start;">
-                    <input type="hidden" name="post_id" value="<?=$post['id']?>">
-                    <img src="<?=htmlspecialchars($user_avatar ?? 'assets/images/default-avatar.png')?>" alt="U" style="width: 2.5rem; height: 2.5rem; border-radius: 50%;">
+                <div style="display: flex; gap: 0.8rem; margin-top: 1.5rem; align-items: flex-start;">
+                    <img src="<?=htmlspecialchars($user_avatar ?? 'assets/images/default-avatar.png')?>" alt="U" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit:cover;">
                     <div style="flex-grow: 1; position: relative;">
-                        <textarea name="comment_content" placeholder="اكتبي تعليقاً لطيفاً داعماً..." required style="width: 100%; border-radius: 1.5rem; border: 1px solid var(--outline-variant); padding: 0.8rem 1.2rem; background-color: #ffffff; font-family: inherit; font-size: 0.95rem; resize: none; min-height: 50px;"></textarea>
+                        <textarea id="comment-input-<?=$post['id']?>" placeholder="اكتبي تعليقاً لطيفاً داعماً..." style="width: 100%; border-radius: 1.5rem; border: 1px solid var(--outline-variant); padding: 0.8rem 1.2rem; background-color: #ffffff; font-family: inherit; font-size: 0.95rem; resize: none; min-height: 50px;"></textarea>
                     </div>
-                    <button type="submit" name="submit_comment" class="btn-primary" style="border-radius: 50%; width: 2.8rem; height: 2.8rem; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;"><i class="fa-solid fa-paper-plane" style="margin-right: -3px;"></i></button>
-                </form>
+                    <button type="button" class="btn-primary" onclick="ajaxComment(<?=$post['id']?>)" style="border-radius: 50%; width: 2.8rem; height: 2.8rem; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0;"><i class="fa-solid fa-paper-plane" style="margin-right: -3px;"></i></button>
+                </div>
                 <?php else: ?>
                 <div style="text-align: center; color: var(--secondary); font-size: 0.9rem; margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 1rem;">سجلي دخولك لتتمكني من التعليق.</div>
                 <?php endif; ?>
@@ -767,12 +775,89 @@ $posts = $st->fetchAll();
     </div>
 
 <script>
+const CSRF_TOKEN = '<?= htmlspecialchars(csrf_generate()) ?>';
+
 function toggleComments(postId) {
-    var section = document.getElementById('comments-section-' + postId);
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
+    const s = document.getElementById('comments-section-' + postId);
+    s.style.display = (s.style.display === 'none') ? 'block' : 'none';
+}
+
+async function ajaxLike(btn) {
+    const postId = btn.dataset.post;
+    const fd = new FormData();
+    fd.append('post_id', postId);
+    const res = await fetch('api/toggle_like.php', {
+        method: 'POST', body: fd,
+        headers: { 'X-CSRF-Token': CSRF_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.success) return;
+    const icon = btn.querySelector('i');
+    if (data.liked) {
+        btn.classList.add('active-like');
+        icon.className = 'fa-solid fa-heart';
     } else {
-        section.style.display = 'none';
+        btn.classList.remove('active-like');
+        icon.className = 'fa-regular fa-heart';
+    }
+    document.getElementById('like-count-' + postId).textContent = data.count + ' إعجاب';
+}
+
+async function ajaxSave(btn) {
+    const postId = btn.dataset.post;
+    const fd = new FormData();
+    fd.append('post_id', postId);
+    const res = await fetch('api/toggle_save.php', {
+        method: 'POST', body: fd,
+        headers: { 'X-CSRF-Token': CSRF_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.success) return;
+    const icon = btn.querySelector('i');
+    const label = document.getElementById('save-label-' + postId);
+    if (data.saved) {
+        btn.classList.add('active-save');
+        icon.className = 'fa-solid fa-bookmark';
+        label.textContent = 'مُحفوظ';
+    } else {
+        btn.classList.remove('active-save');
+        icon.className = 'fa-regular fa-bookmark';
+        label.textContent = 'حفظ';
+    }
+}
+
+async function ajaxComment(postId) {
+    const textarea = document.getElementById('comment-input-' + postId);
+    const content = textarea.value.trim();
+    if (!content) return;
+    const fd = new FormData();
+    fd.append('post_id', postId);
+    fd.append('content', content);
+    const res = await fetch('api/submit_comment.php', {
+        method: 'POST', body: fd,
+        headers: { 'X-CSRF-Token': CSRF_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.success) return;
+    textarea.value = '';
+    const list = document.getElementById('comments-list-' + postId);
+    const noMsg = list.querySelector('.no-comments-msg');
+    if (noMsg) noMsg.remove();
+    const html = `<div style="display:flex;gap:1rem;margin-bottom:1rem;">
+        <img src="${data.user_avatar}" alt="" style="width:2.5rem;height:2.5rem;border-radius:50%;object-fit:cover;">
+        <div style="background:#fff;padding:1rem 1.2rem;border-radius:1.5rem;border-top-right-radius:0;flex-grow:1;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;">
+                <b style="font-size:.9rem;color:var(--primary-dark);font-family:var(--font-headline);font-weight:800;">${data.user_name}</b>
+                <small style="color:var(--secondary);font-size:.75rem;">${data.created_at}</small>
+            </div>
+            <div style="font-size:.95rem;color:var(--on-surface);line-height:1.6;">${data.content.replace(/\n/g,'<br>')}</div>
+        </div>
+    </div>`;
+    list.insertAdjacentHTML('beforeend', html);
+    const countEl = document.getElementById('comment-count-' + postId);
+    if (countEl) {
+        const n = parseInt(countEl.textContent) + 1;
+        countEl.textContent = n + ' تعليق';
     }
 }
 </script>

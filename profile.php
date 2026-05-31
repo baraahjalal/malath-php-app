@@ -1,6 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-include 'includes/db.php'; 
+require_once 'includes/csrf.php';
+csrf_generate();
+include 'includes/db.php';
 
 // 1. حماية الصفحة
 if (!isset($_SESSION['user_id'])) {
@@ -11,6 +13,7 @@ $user_id = $_SESSION['user_id'];
 
 // ==== معالجة مسح وتعديل المنشورات ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
     if (isset($_POST['delete_post_id'])) {
         $del_id = intval($_POST['delete_post_id']);
         $st = $pdo->prepare("DELETE FROM posts WHERE id = ? AND user_id = ?");
@@ -42,14 +45,14 @@ $stmt_posts = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE user_id = ?");
 $stmt_posts->execute([$user_id]);
 $posts_count = $stmt_posts->fetchColumn();
 
-$stmt_articles = $pdo->prepare("SELECT COUNT(*) FROM articles WHERE user_id = ?");
+$stmt_articles = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE user_id = ? AND type = 'article'");
 $stmt_articles->execute([$user_id]);
 $articles_count = $stmt_articles->fetchColumn();
 
 $contributions_count = $posts_count + $articles_count;
 
-// 4. جلب عدد المحفوظات (Bookmarks)
-$stmt_saved = $pdo->prepare("SELECT COUNT(*) FROM bookmarks WHERE user_id = ?");
+// 4. جلب عدد المحفوظات
+$stmt_saved = $pdo->prepare("SELECT COUNT(*) FROM post_saves WHERE user_id = ?");
 $stmt_saved->execute([$user_id]);
 $saved_count = $stmt_saved->fetchColumn();
 
@@ -258,6 +261,7 @@ $saved_posts = $stmt_saved_posts->fetchAll();
                 
                 <!-- سنوجه الفورم لنفس الصفحة لمعالجة التحديث لاحقاً -->
                 <form action="update_profile.php" method="POST" enctype="multipart/form-data">
+                    <?php csrf_field(); ?>
 
 <!-- قسم الصورة الشخصية داخل الفورم -->
     <div class="profile-avatar-large" style="margin-bottom: 2rem;">
@@ -360,6 +364,7 @@ $saved_posts = $stmt_saved_posts->fetchAll();
                                 <div class="post-actions-crud">
                                     <button type="button" onclick="toggleEditForm(<?=$act['post_id']?>)" class="btn-crud-edit"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
                                     <form method="POST" style="display:inline;" onsubmit="return confirm('هل أنتِ متأكدة من مسح هذا المنشور؟ لا يمكن التراجع.');">
+                                        <?php csrf_field(); ?>
                                         <input type="hidden" name="delete_post_id" value="<?=$act['post_id']?>">
                                         <button type="submit" class="btn-crud-delete"><i class="fa-solid fa-trash"></i> مسح</button>
                                     </form>
@@ -368,6 +373,7 @@ $saved_posts = $stmt_saved_posts->fetchAll();
                                 <!-- نموذج التعديل المخفي -->
                                 <div id="edit-form-<?=$act['post_id']?>" style="display:none; margin-top: 1rem; border-top: 1px solid var(--outline-variant); padding-top: 1rem;">
                                     <form method="POST">
+                                        <?php csrf_field(); ?>
                                         <input type="hidden" name="edit_post_id" value="<?=$act['post_id']?>">
                                         <textarea name="edit_content" required style="width: 100%; min-height: 80px; padding: 0.8rem 1.2rem; border-radius: 1rem; border: 1px solid var(--outline-variant); margin-bottom: 0.5rem; font-family: inherit; font-size: 0.95rem; background-color: var(--surface-container-high); resize: none;"><?=htmlspecialchars($act['post_content'])?></textarea>
                                         <div style="display:flex; gap:0.5rem; justify-content: flex-end;">

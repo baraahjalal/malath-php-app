@@ -1,0 +1,87 @@
+<?php
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Models\UserModel;
+
+class AuthController extends Controller {
+
+    public function showLogin(): void {
+        if (isset($_SESSION['user_id'])) {
+            $this->redirect('/malath-php-app/index.php');
+        }
+        $error       = '';
+        $email       = '';
+        $redirect_to = 'index.php';
+        $this->view('auth.login', compact('error', 'email', 'redirect_to'));
+    }
+
+    public function handleLogin(): void {
+        \csrf_verify();
+        $model    = new UserModel();
+        $email    = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $allowed  = ['index.php','community.php','profile.php','article.php'];
+        $raw      = $_GET['redirect'] ?? 'index.php';
+        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index.php';
+
+        $error = '';
+        if (empty($email) || empty($password)) {
+            $error = "يرجى ملء جميع الحقول.";
+        } else {
+            $user = $model->findByEmail($email);
+            if ($user && password_verify($password, $user['password'])) {
+                session_regenerate_id(true);
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_role'] = $user['role'] ?? 'user';
+                $dest = ($_SESSION['user_role'] === 'admin') ? 'dashboard.php' : $redirect_to;
+                $this->redirect('/malath-php-app/' . $dest);
+            } else {
+                $error = "خطأ في البريد الإلكتروني أو كلمة المرور.";
+            }
+        }
+        $this->view('auth.login', compact('error', 'email', 'redirect_to'));
+    }
+
+    public function showRegister(): void {
+        $error = ''; $success = ''; $first_name = ''; $last_name = ''; $email = '';
+        $this->view('auth.register', compact('error', 'success', 'first_name', 'last_name', 'email'));
+    }
+
+    public function handleRegister(): void {
+        \csrf_verify();
+        $model      = new UserModel();
+        $first_name = trim($_POST['first_name'] ?? '');
+        $last_name  = trim($_POST['last_name']  ?? '');
+        $email      = trim($_POST['email']      ?? '');
+        $password   = $_POST['password']        ?? '';
+        $error      = ''; $success = '';
+
+        if (!$first_name || !$last_name || !$email || !$password) {
+            $error = "جميع الحقول مطلوبة!";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "صيغة البريد الإلكتروني غير صحيحة!";
+        } elseif (strlen($password) < 6) {
+            $error = "كلمة المرور يجب أن تكون 6 أحرف أو أكثر.";
+        } elseif ($model->emailExists($email)) {
+            $error = "البريد الإلكتروني مستخدم بالفعل.";
+        } else {
+            try {
+                $model->create($first_name . ' ' . $last_name, $email, password_hash($password, PASSWORD_DEFAULT));
+                $success = "تم إنشاء الحساب بنجاح! سيتم توجيهك لصفحة الدخول...";
+                echo '<script>setTimeout(()=>{ window.location.href="/malath-php-app/login.php"; }, 3000);</script>';
+            } catch (\PDOException $e) {
+                error_log("Register: " . $e->getMessage());
+                $error = "حدث خطأ في الخادم، يرجى المحاولة لاحقاً.";
+            }
+        }
+        $this->view('auth.register', compact('error', 'success', 'first_name', 'last_name', 'email'));
+    }
+
+    public function logout(): void {
+        session_unset();
+        session_destroy();
+        $this->redirect('/malath-php-app/index.php');
+    }
+}

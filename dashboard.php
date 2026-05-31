@@ -1,5 +1,75 @@
 <?php
-// Dashboard Layout (No standard header/footer)
+require_once 'includes/db.php';
+require_once 'includes/admin_auth.php';
+require_once 'includes/csrf.php';
+csrf_generate();
+
+// ==== إجراءات POST ====
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+
+    if (isset($_POST['delete_post'])) {
+        $pid = intval($_POST['post_id']);
+        $pdo->prepare("DELETE FROM posts WHERE id = ?")->execute([$pid]);
+        header("Location: dashboard.php?tab=posts&msg=post_deleted");
+        exit;
+    }
+
+    if (isset($_POST['delete_user'])) {
+        $uid = intval($_POST['target_user_id']);
+        if ($uid !== (int)$_SESSION['user_id']) {
+            $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
+        }
+        header("Location: dashboard.php?tab=users&msg=user_deleted");
+        exit;
+    }
+
+    if (isset($_POST['toggle_role'])) {
+        $uid  = intval($_POST['target_user_id']);
+        $role = $_POST['new_role'] === 'admin' ? 'admin' : 'user';
+        $pdo->prepare("UPDATE users SET role = ? WHERE id = ?")->execute([$role, $uid]);
+        header("Location: dashboard.php?tab=users");
+        exit;
+    }
+}
+
+$tab = $_GET['tab'] ?? 'overview';
+
+// ==== إحصائيات ====
+$total_users    = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$total_posts    = $pdo->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+$total_comments = $pdo->query("SELECT COUNT(*) FROM post_comments")->fetchColumn();
+$total_likes    = $pdo->query("SELECT COUNT(*) FROM post_likes")->fetchColumn();
+$new_users_week = $pdo->query("SELECT COUNT(*) FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
+$new_posts_week = $pdo->query("SELECT COUNT(*) FROM posts  WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")->fetchColumn();
+
+// ==== المستخدمون ====
+$users = [];
+if ($tab === 'users') {
+    $search = trim($_GET['search'] ?? '');
+    if ($search) {
+        $st = $pdo->prepare("SELECT id, name, email, role, created_at FROM users WHERE name LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT 50");
+        $st->execute(["%$search%", "%$search%"]);
+    } else {
+        $st = $pdo->query("SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50");
+    }
+    $users = $st->fetchAll();
+}
+
+// ==== المنشورات ====
+$posts = [];
+if ($tab === 'posts') {
+    $posts = $pdo->query("
+        SELECT p.id, p.title, p.content, p.type, p.created_at,
+               u.name AS user_name, c.name AS community_name,
+               (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) AS likes,
+               (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) AS comments
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        JOIN communities c ON p.community_id = c.id
+        ORDER BY p.created_at DESC LIMIT 50
+    ")->fetchAll();
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -7,486 +77,301 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم | ملاذ</title>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
-        body { 
-            background-color: var(--surface); 
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        body { background-color: var(--surface); display: flex; min-height: 100vh; overflow-x: hidden; }
 
-        /* Sidebar Styling */
         .admin-sidebar {
-            width: 18rem;
-            background-color: #FFFFFF;
-            height: 100vh;
-            position: fixed;
-            right: 0;
-            top: 0;
-            border-top-left-radius: 2rem;
-            border-bottom-left-radius: 2rem;
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 0;
-            z-index: 50;
-            box-shadow: -5px 0 30px rgba(197, 58, 98, 0.05); /* Soft left shadow */
-            transition: var(--transition-smooth);
+            width: 17rem; background: #fff; height: 100vh; position: fixed; right: 0; top: 0;
+            border-top-left-radius: 2rem; border-bottom-left-radius: 2rem;
+            display: flex; flex-direction: column; padding: 2rem 0; z-index: 50;
+            box-shadow: -5px 0 30px rgba(197,58,98,0.06);
         }
-
-        .sidebar-header {
-            padding: 0 2rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .sidebar-nav {
-            flex-grow: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            padding: 0 1rem;
-        }
-
+        .sidebar-header { padding: 0 2rem; margin-bottom: 2rem; }
+        .sidebar-nav { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: .4rem; padding: 0 1rem; }
         .admin-nav-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.85rem 1.5rem;
-            border-radius: 1rem;
-            text-decoration: none;
-            color: var(--on-surface);
-            font-weight: 700;
-            font-family: var(--font-body);
-            transition: var(--transition-fast);
+            display: flex; align-items: center; gap: .9rem; padding: .8rem 1.4rem;
+            border-radius: 1rem; text-decoration: none; color: var(--on-surface);
+            font-weight: 700; font-family: var(--font-body); transition: all .2s;
         }
+        .admin-nav-link:hover { background: var(--surface-container); color: var(--primary-dark); transform: translateX(-4px); }
+        .admin-nav-link.active { background: var(--primary-gradient); color: white; box-shadow: var(--shadow-sm); }
+        .admin-nav-link i { width: 20px; text-align: center; }
+        .sidebar-footer { margin-top: auto; padding: 1.5rem 2rem 0; border-top: 1px solid var(--outline-variant); }
 
-        .admin-nav-link:hover {
-            background-color: var(--surface-container);
-            color: var(--primary-dark);
-            transform: translateX(-5px);
-        }
-
-        .admin-nav-link.active {
-            background: var(--primary-gradient);
-            color: white;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding: 1.5rem 2rem 0;
-            border-top: 1px solid var(--outline-variant);
-        }
-
-        /* Main Content Styling */
-        .admin-main {
-            flex-grow: 1;
-            margin-right: 18rem;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
+        .admin-main { flex-grow: 1; margin-right: 17rem; display: flex; flex-direction: column; min-width: 0; }
         .admin-header {
-            height: 5.5rem;
-            position: sticky;
-            top: 0;
-            background: rgba(255, 250, 252, 0.8);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 3rem;
-            z-index: 40;
+            height: 5rem; position: sticky; top: 0;
+            background: rgba(255,250,252,.85); backdrop-filter: blur(16px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2.5rem; z-index: 40;
             border-bottom: 1px solid var(--surface-container-high);
-            box-shadow: 0 4px 20px rgba(197, 58, 98, 0.02);
         }
+        .dashboard-content { padding: 2rem 2.5rem; flex-grow: 1; }
 
-        .admin-search {
-            position: relative;
-        }
-        
-        .admin-search input {
-            background-color: #FFFFFF;
-            border: 1px solid var(--outline-variant);
-            border-radius: 2rem;
-            padding: 0.75rem 1.5rem 0.75rem 3rem;
-            width: 24rem;
-            color: var(--on-surface);
-            font-family: var(--font-body);
-            transition: var(--transition-fast);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        }
-        
-        .admin-search input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-container);
-        }
-        
-        .admin-search i {
-            position: absolute;
-            left: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--secondary);
-        }
-
-        .dashboard-content {
-            padding: 2.5rem 3rem;
-            flex-grow: 1;
-        }
-
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.2rem; margin-bottom: 2.5rem; }
         .stat-card {
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--outline-variant);
-            transition: var(--transition-smooth);
+            background: #fff; padding: 1.8rem; border-radius: 1.5rem;
+            box-shadow: var(--shadow-sm); border: 1px solid var(--outline-variant);
+            transition: transform .25s, box-shadow .25s;
         }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .stat-icon { width: 3rem; height: 3rem; border-radius: .8rem; background: var(--surface-container); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.3rem; }
 
-        .stat-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-4px);
-        }
+        .data-card { background: #fff; border-radius: 1.5rem; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--outline-variant); margin-bottom: 2rem; }
+        .data-card-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid var(--outline-variant); }
+        .data-table { width: 100%; border-collapse: collapse; text-align: right; }
+        .data-table th { background: var(--surface-container); padding: 1rem 1.5rem; color: var(--secondary); font-size: .9rem; font-weight: 700; border-bottom: 1px solid var(--outline-variant); }
+        .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-container-high); font-size: .95rem; }
+        .data-table tr:hover td { background: var(--surface-container-high); }
+        .data-table tr:last-child td { border-bottom: none; }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
+        .badge-role-admin { background: #fce7f3; color: #be185d; padding: .25rem .8rem; border-radius: 1rem; font-size: .8rem; font-weight: 700; }
+        .badge-role-user  { background: var(--surface-container); color: var(--secondary); padding: .25rem .8rem; border-radius: 1rem; font-size: .8rem; font-weight: 700; }
 
-        .data-table-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--outline-variant);
-            margin-bottom: 3rem;
-        }
+        .btn-sm { padding: .3rem .9rem; border-radius: 1rem; font-size: .8rem; font-weight: 700; border: none; cursor: pointer; transition: all .2s; font-family: inherit; }
+        .btn-danger { background: #fee2e2; color: #b91c1c; }
+        .btn-danger:hover { background: #fca5a5; }
+        .btn-info { background: #e0f2fe; color: #0369a1; }
+        .btn-info:hover { background: #bae6fd; }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-        }
+        .search-box { display: flex; gap: .8rem; padding: 1.2rem 2rem; border-bottom: 1px solid var(--outline-variant); }
+        .search-box input { flex-grow: 1; padding: .6rem 1.2rem; border: 1px solid var(--outline-variant); border-radius: 2rem; font-family: inherit; font-size: .95rem; outline: none; }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(197,58,98,.08); }
 
-        .data-table th {
-            background-color: var(--surface-container);
-            padding: 1.5rem 2rem;
-            color: var(--secondary);
-            font-size: 0.95rem;
-            font-weight: 700;
-            border-bottom: 1px solid var(--outline-variant);
-            font-family: var(--font-headline);
-        }
+        .alert-banner { padding: .9rem 1.5rem; border-radius: 1rem; margin-bottom: 1.5rem; font-weight: 600; font-size: .95rem; }
+        .alert-success { background: #dcfce7; color: #166534; }
 
-        .data-table td {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid var(--surface-container-high);
-            color: var(--on-surface);
-            font-size: 1.05rem;
-        }
+        .tab-nav { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .tab-nav a { padding: .6rem 1.5rem; border-radius: 2rem; text-decoration: none; font-weight: 700; font-size: .9rem; color: var(--secondary); background: var(--surface-container); transition: all .2s; }
+        .tab-nav a.active { background: var(--primary-gradient); color: white; }
 
-        .data-table tr {
-            transition: var(--transition-fast);
-        }
-
-        .data-table tr:hover {
-            background-color: var(--surface-container-high);
-        }
-
-        .report-card {
-            background-color: #FFFFFF;
-            padding: 2rem;
-            border-radius: 1.5rem;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--outline-variant);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .report-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 6px; height: 100%;
-        }
-
-        .report-card.error::before { background-color: var(--error); }
-        .report-card.warning::before { background-color: #F59E0B; }
-        
-        .pagination-btn {
-            width: 2.75rem; height: 2.75rem;
-            border-radius: 50%;
-            border: 1px solid var(--outline-variant);
-            background: white;
-            color: var(--secondary);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition-fast);
-        }
-        
-        .pagination-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        
-        .pagination-btn.active {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            box-shadow: var(--shadow-sm);
-        }
-
+        .post-preview { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--secondary); font-size: .9rem; }
+        .badge-type { padding: .25rem .7rem; border-radius: 1rem; font-size: .75rem; font-weight: 700; }
+        .badge-vent    { background: #fce7f3; color: #be185d; }
+        .badge-advice  { background: #fef3c7; color: #d97706; }
+        .badge-question{ background: #e0f2fe; color: #0284c7; }
+        .badge-article { background: var(--primary-container); color: var(--primary-dark); }
     </style>
 </head>
 <body>
 
-<!-- Sidebar embedded for standalone showcase -->
-<aside class="admin-sidebar animate-fade-in-up">
+<!-- Sidebar -->
+<aside class="admin-sidebar">
     <div class="sidebar-header">
-        <a href="index.php" class="font-headline font-black text-primary" style="font-size: 2.5rem; text-decoration: none;">ملاذ</a>
+        <a href="index.php" class="font-headline font-black text-primary" style="font-size:2.2rem;text-decoration:none;">ملاذ</a>
+        <div style="font-size:.8rem;color:var(--secondary);margin-top:.2rem;">لوحة التحكم</div>
     </div>
-    
     <nav class="sidebar-nav">
-        <a href="#" class="admin-nav-link active">
-            <i class="fa-solid fa-house" style="width: 20px; text-align: center;"></i>
-            لوحة الإحصائيات
+        <a href="dashboard.php?tab=overview" class="admin-nav-link <?= $tab==='overview'?'active':'' ?>">
+            <i class="fa-solid fa-house"></i> الإحصائيات
         </a>
-        <a href="#" class="admin-nav-link">
-            <i class="fa-solid fa-users" style="width: 20px; text-align: center;"></i>
-            إدارة العضوات
+        <a href="dashboard.php?tab=users" class="admin-nav-link <?= $tab==='users'?'active':'' ?>">
+            <i class="fa-solid fa-users"></i> إدارة العضوات
         </a>
-        <a href="#" class="admin-nav-link">
-            <i class="fa-solid fa-file-lines" style="width: 20px; text-align: center;"></i>
-            المقالات والمحتوى
+        <a href="dashboard.php?tab=posts" class="admin-nav-link <?= $tab==='posts'?'active':'' ?>">
+            <i class="fa-solid fa-comments"></i> إدارة المنشورات
         </a>
-        <a href="#" class="admin-nav-link">
-            <i class="fa-solid fa-comments" style="width: 20px; text-align: center;"></i>
-            المنتدى والنقاشات
-        </a>
-        <a href="#" class="admin-nav-link">
-            <i class="fa-solid fa-shield-halved" style="width: 20px; text-align: center;"></i>
-            البلاغات والرقابة
-        </a>
-        <a href="#" class="admin-nav-link">
-            <i class="fa-solid fa-chart-pie" style="width: 20px; text-align: center;"></i>
-            تحليلات الأداء
+        <a href="community.php" class="admin-nav-link">
+            <i class="fa-solid fa-globe"></i> الموقع الرئيسي
         </a>
     </nav>
-
     <div class="sidebar-footer">
-        <a href="#" class="admin-nav-link" style="color: var(--error);">
-            <i class="fa-solid fa-arrow-right-from-bracket" style="width: 20px; text-align: center;"></i>
-            تسجيل الخروج
+        <a href="logout.php" class="admin-nav-link" style="color:var(--error);">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج
         </a>
     </div>
 </aside>
 
+<!-- Main -->
 <main class="admin-main">
     <header class="admin-header">
-        <div style="visibility: hidden;">Spacer</div> <!-- For flex distribution -->
-        
-        <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <div class="admin-search">
-                <input type="text" placeholder="البحث في لوحة التحكم...">
-                <i class="fa-solid fa-search"></i>
-            </div>
-            
-            <button class="icon-button" style="position: relative; background: #FFFFFF; border: 1px solid var(--outline-variant);">
-                <i class="fa-regular fa-bell" style="color: var(--secondary);"></i>
-                <span class="pulse-dot" style="position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; background: var(--error);"></span>
-            </button>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 1rem; border-right: 1px solid var(--outline-variant); padding-right: 1.5rem;">
-            <div style="text-align: left;">
-                <div class="font-headline font-bold text-primary" style="font-size: 1.15rem;">سارة القحطاني</div>
-                <div style="font-size: 0.85rem; color: var(--secondary); font-weight: 600;">مديرة المنصة</div>
-            </div>
-            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=256&auto=format&fit=crop" alt="Avatar" class="profile-avatar" style="width: 3.5rem; height: 3.5rem; border-color: var(--primary-container);">
+        <h2 class="font-headline font-bold text-primary-dark" style="font-size:1.3rem;margin:0;">
+            <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات'][$tab] ?? 'لوحة التحكم' ?>
+        </h2>
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:.9rem;color:var(--secondary);">مرحباً،</span>
+            <strong class="font-headline text-primary"><?= htmlspecialchars($_SESSION['user_name']) ?></strong>
         </div>
     </header>
 
     <div class="dashboard-content">
-        <!-- Stats Grid -->
-        <section class="stats-grid">
-            <div class="stat-card animate-fade-in-up delay-100">
-                <span style="color: var(--secondary); font-weight: 700; font-family: var(--font-headline); font-size: 1.1rem;">إجمالي العضوات</span>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                    <span class="font-headline font-black text-primary-dark" style="font-size: 2.25rem;">١٢,٨٤٠</span>
-                    <div style="width: 3.5rem; height: 3.5rem; border-radius: 1rem; background-color: var(--surface-container); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.5rem;">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card animate-fade-in-up delay-200">
-                <span style="color: var(--secondary); font-weight: 700; font-family: var(--font-headline); font-size: 1.1rem;">المقالات المنشورة</span>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                    <span class="font-headline font-black text-primary-dark" style="font-size: 2.25rem;">٨٤٢</span>
-                    <div style="width: 3.5rem; height: 3.5rem; border-radius: 1rem; background-color: var(--surface-container); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.5rem;">
-                        <i class="fa-solid fa-file-lines"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card animate-fade-in-up delay-300" style="grid-column: span 2; background: var(--primary-gradient); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-primary); border: none; position: relative; overflow: hidden;">
-                <!-- Decorative background elements -->
-                <div style="position: absolute; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%); top: -50px; left: -50px;"></div>
-                
-                <div style="position: relative; z-index: 10;">
-                    <div style="opacity: 0.9; margin-bottom: 0.5rem; font-family: var(--font-headline); font-size: 1.25rem; font-weight: 700;">نمو المجتمع الرقمي</div>
-                    <div class="font-headline font-black" style="font-size: 2.75rem; margin-bottom: 0.25rem;">+١٥%</div>
-                    <div style="font-size: 0.9rem; opacity: 0.8; font-weight: 600;">ارتفاع إيجابي مقارنة بالشهر الماضي</div>
-                </div>
-                <div style="display: flex; align-items: flex-end; gap: 0.35rem; height: 4.5rem; position: relative; z-index: 10;">
-                    <div style="width: 0.6rem; background-color: rgba(255,255,255,0.2); height: 1.5rem; border-radius: 4px;"></div>
-                    <div style="width: 0.6rem; background-color: rgba(255,255,255,0.4); height: 2.5rem; border-radius: 4px;"></div>
-                    <div style="width: 0.6rem; background-color: rgba(255,255,255,0.6); height: 2rem; border-radius: 4px;"></div>
-                    <div style="width: 0.6rem; background-color: rgba(255,255,255,0.8); height: 3.5rem; border-radius: 4px;"></div>
-                    <div style="width: 0.6rem; background-color: white; height: 4.5rem; border-radius: 4px;"></div>
-                </div>
-            </div>
-        </section>
+        <?php if(isset($_GET['msg'])): ?>
+        <div class="alert-banner alert-success">
+            <?= ['post_deleted'=>'✅ تم حذف المنشور.','user_deleted'=>'✅ تم حذف العضو.'][$_GET['msg']] ?? '' ?>
+        </div>
+        <?php endif; ?>
 
-        <!-- Articles Table -->
-        <section style="margin-bottom: 3.5rem;" class="animate-fade-in-up">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="font-headline font-bold text-primary-dark" style="font-size: 1.75rem;">أحدث المقالات المراجعة</h2>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn-outline" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem; background: #FFFFFF;">
-                        <i class="fa-solid fa-filter"></i> تصفية
-                    </button>
+        <?php if($tab === 'overview'): ?>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                    <span style="color:var(--secondary);font-weight:700;font-size:1rem;">إجمالي العضوات</span>
+                    <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
                 </div>
+                <div class="font-headline font-black text-primary-dark" style="font-size:2.2rem;"><?= number_format($total_users) ?></div>
+                <div style="font-size:.85rem;color:#10b981;margin-top:.5rem;font-weight:600;">+<?= $new_users_week ?> هذا الأسبوع</div>
             </div>
-            
-            <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>العنوان</th>
-                            <th>الكاتبة</th>
-                            <th>التصنيف</th>
-                            <th>الحالة</th>
-                            <th>التاريخ</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 1.25rem;">
-                                    <img src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=256&auto=format&fit=crop" style="width: 3.5rem; height: 3.5rem; border-radius: 0.75rem; object-fit: cover;">
-                                    <span style="font-weight: 800; font-family: var(--font-headline); color: var(--on-surface);">كيفية الموازنة بين العمل والحياة الخاصة</span>
-                                </div>
-                            </td>
-                            <td style="font-weight: 600;">نورة محمد</td>
-                            <td><span class="badge" style="background-color: var(--primary-container); color: var(--primary-dark); font-size: 0.8rem; border: none;">تطوير الذات</span></td>
-                            <td><span style="color: #10B981; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;"><span style="width: 10px; height: 10px; background-color: #10B981; border-radius: 50%;"></span> منشور</span></td>
-                            <td style="color: var(--secondary); font-size: 0.95rem;">١٢ مايو ٢٠٢٤</td>
-                            <td>
-                                <div style="display: flex; gap: 1rem;">
-                                    <button style="border: none; background: var(--surface-container); width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; color: var(--primary); cursor: pointer; transition: var(--transition-fast);"><i class="fa-solid fa-pen-to-square"></i></button>
-                                    <button style="border: none; background: #FEE2E2; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; color: var(--error); cursor: pointer; transition: var(--transition-fast);"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 1.25rem;">
-                                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=256&auto=format&fit=crop" style="width: 3.5rem; height: 3.5rem; border-radius: 0.75rem; object-fit: cover;">
-                                    <span style="font-weight: 800; font-family: var(--font-headline); color: var(--on-surface);">بناء فريق نسائي ناجح</span>
-                                </div>
-                            </td>
-                            <td style="font-weight: 600;">ليلى أحمد</td>
-                            <td><span class="badge" style="background-color: var(--primary-container); color: var(--primary-dark); font-size: 0.8rem; border: none;">ريادة أعمال</span></td>
-                            <td><span style="color: #F59E0B; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;"><span style="width: 10px; height: 10px; background-color: #F59E0B; border-radius: 50%;"></span> قيد المراجعة</span></td>
-                            <td style="color: var(--secondary); font-size: 0.95rem;">١٠ مايو ٢٠٢٤</td>
-                            <td>
-                                <div style="display: flex; gap: 1rem;">
-                                    <button style="border: none; background: var(--surface-container); width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; color: var(--primary); cursor: pointer; transition: var(--transition-fast);"><i class="fa-solid fa-pen-to-square"></i></button>
-                                    <button style="border: none; background: #FEE2E2; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; color: var(--error); cursor: pointer; transition: var(--transition-fast);"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="stat-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                    <span style="color:var(--secondary);font-weight:700;font-size:1rem;">إجمالي المنشورات</span>
+                    <div class="stat-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                </div>
+                <div class="font-headline font-black text-primary-dark" style="font-size:2.2rem;"><?= number_format($total_posts) ?></div>
+                <div style="font-size:.85rem;color:#10b981;margin-top:.5rem;font-weight:600;">+<?= $new_posts_week ?> هذا الأسبوع</div>
             </div>
-            
-            <!-- Pagination -->
-            <div style="display: flex; justify-content: center; gap: 0.5rem;">
-                <button class="pagination-btn"><i class="fa-solid fa-chevron-right"></i></button>
-                <button class="pagination-btn active">١</button>
-                <button class="pagination-btn">٢</button>
-                <button class="pagination-btn">٣</button>
-                <span style="color: var(--secondary); display: flex; align-items: center; justify-content: center; width: 2.5rem;">...</span>
-                <button class="pagination-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="stat-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                    <span style="color:var(--secondary);font-weight:700;font-size:1rem;">التعليقات</span>
+                    <div class="stat-icon"><i class="fa-solid fa-comments"></i></div>
+                </div>
+                <div class="font-headline font-black text-primary-dark" style="font-size:2.2rem;"><?= number_format($total_comments) ?></div>
             </div>
-        </section>
+            <div class="stat-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                    <span style="color:var(--secondary);font-weight:700;font-size:1rem;">الإعجابات</span>
+                    <div class="stat-icon"><i class="fa-solid fa-heart"></i></div>
+                </div>
+                <div class="font-headline font-black text-primary-dark" style="font-size:2.2rem;"><?= number_format($total_likes) ?></div>
+            </div>
+        </div>
 
-        <!-- Reports Section -->
-        <section class="animate-fade-in-up">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h2 class="font-headline font-bold text-primary-dark" style="font-size: 1.75rem;">إشعارات وبلاغات سريعة</h2>
-                <span class="badge" style="background-color: var(--surface-container-high); color: var(--primary-dark); border: 1px solid var(--outline-variant); font-size: 0.85rem;"><span class="pulse-dot"></span> ٢ تنبيه جديد</span>
+        <!-- أحدث المنشورات -->
+        <div class="data-card">
+            <div class="data-card-header">
+                <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">آخر المنشورات</h3>
+                <a href="dashboard.php?tab=posts" class="btn-sm btn-info">عرض الكل</a>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-                <div class="report-card error">
-                    <div style="display: flex; gap: 1.25rem;">
-                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop" style="width: 3.5rem; height: 3.5rem; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-sm);">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 800; font-family: var(--font-headline); font-size: 1.2rem; color: var(--on-surface);">مريم الكندي</span>
-                                <span style="font-size: 0.85rem; color: var(--secondary); font-weight: 600;">منذ ساعتين</span>
-                            </div>
-                            <p style="color: var(--on-surface); font-size: 1.05rem; max-width: 48rem; line-height: 1.6;">تنبيه آلي: تم رصد محتوى قد يخالف إرشادات المجتمع (لغة حادة) في منتدى 'ريادة الأعمال'. يرجى المراجعة واتخاذ الإجراء اللازم للحفاظ على بيئتنا الإيجابية.</p>
+            <table class="data-table">
+                <thead><tr>
+                    <th>المستخدمة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>التاريخ</th>
+                </tr></thead>
+                <tbody>
+                <?php
+                $recent = $pdo->query("
+                    SELECT p.*, u.name AS user_name, c.name AS community_name
+                    FROM posts p JOIN users u ON p.user_id=u.id JOIN communities c ON p.community_id=c.id
+                    ORDER BY p.created_at DESC LIMIT 8
+                ")->fetchAll();
+                foreach($recent as $r): ?>
+                <tr>
+                    <td><strong><?= htmlspecialchars($r['user_name']) ?></strong></td>
+                    <td><?= htmlspecialchars($r['community_name']) ?></td>
+                    <td><span class="badge-type badge-<?= $r['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$r['type']] ?? $r['type'] ?></span></td>
+                    <td class="post-preview"><?= htmlspecialchars(mb_substr($r['content'],0,60)) ?>…</td>
+                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($r['created_at'])) ?></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- أحدث المستخدمين -->
+        <div class="data-card">
+            <div class="data-card-header">
+                <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">آخر التسجيلات</h3>
+                <a href="dashboard.php?tab=users" class="btn-sm btn-info">إدارة الكل</a>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th></tr></thead>
+                <tbody>
+                <?php
+                $recent_users = $pdo->query("SELECT id,name,email,role,created_at FROM users ORDER BY created_at DESC LIMIT 6")->fetchAll();
+                foreach($recent_users as $u): ?>
+                <tr>
+                    <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
+                    <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
+                    <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
+                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <?php elseif($tab === 'users'): ?>
+        <div class="data-card">
+            <div class="data-card-header">
+                <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">العضوات (<?= $total_users ?>)</h3>
+            </div>
+            <form method="GET" class="search-box">
+                <input type="hidden" name="tab" value="users">
+                <input type="text" name="search" placeholder="ابحثي باسم أو بريد..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                <button type="submit" class="btn-sm btn-info" style="padding:.6rem 1.4rem;">بحث</button>
+            </form>
+            <table class="data-table">
+                <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
+                <tbody>
+                <?php foreach($users as $u): ?>
+                <tr>
+                    <td style="color:var(--secondary);"><?= $u['id'] ?></td>
+                    <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
+                    <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
+                    <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
+                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
+                    <td>
+                        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                            <?php if($u['id'] != $_SESSION['user_id']): ?>
+                            <form method="POST" style="display:inline;">
+                                <?php csrf_field(); ?>
+                                <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
+                                <input type="hidden" name="new_role" value="<?= $u['role']==='admin'?'user':'admin' ?>">
+                                <button type="submit" name="toggle_role" class="btn-sm btn-info">
+                                    <?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?>
+                                </button>
+                            </form>
+                            <form method="POST" style="display:inline;" onsubmit="return confirm('حذف هذه العضو نهائياً؟');">
+                                <?php csrf_field(); ?>
+                                <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
+                                <button type="submit" name="delete_user" class="btn-sm btn-danger">حذف</button>
+                            </form>
+                            <?php else: ?>
+                            <span style="font-size:.8rem;color:var(--secondary);">أنتِ</span>
+                            <?php endif; ?>
                         </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 2rem;">مراجعة المحتوى</button>
-                    </div>
-                </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
-                <div class="report-card warning">
-                    <div style="display: flex; gap: 1.25rem;">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=256&auto=format&fit=crop" style="width: 3.5rem; height: 3.5rem; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: var(--shadow-sm);">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 800; font-family: var(--font-headline); font-size: 1.2rem; color: var(--on-surface);">تحديث النظام</span>
-                                <span style="font-size: 0.85rem; color: var(--secondary); font-weight: 600;">منذ ٥ ساعات</span>
-                            </div>
-                            <p style="color: var(--on-surface); font-size: 1.05rem; max-width: 48rem; line-height: 1.6;">تم اكتمال النسخ الاحتياطي لقاعدة البيانات بنجاح للحفاظ على سير العمل. تذكرين أننا مستمرون في تقديم الدعم لكِ.</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn-outline" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 2rem; background: #FFFFFF;">عرض التفاصيل</button>
-                    </div>
-                </div>
+        <?php elseif($tab === 'posts'): ?>
+        <div class="data-card">
+            <div class="data-card-header">
+                <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">المنشورات (<?= $total_posts ?>)</h3>
             </div>
-        </section>
-
-        <!-- Admin Footer -->
-        <footer style="margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--outline-variant); text-align: center; color: var(--secondary); font-size: 0.95rem; font-weight: 600;">
-            <p>ملاذ - مساحة آمنة للتميز، صممت بحب. © ٢٠٢٤ جميع الحقوق محفوظة.</p>
-        </footer>
+            <table class="data-table">
+                <thead><tr><th>الكاتبة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>❤ إعجاب</th><th>💬 تعليق</th><th>التاريخ</th><th>حذف</th></tr></thead>
+                <tbody>
+                <?php foreach($posts as $p): ?>
+                <tr>
+                    <td><strong><?= htmlspecialchars($p['user_name']) ?></strong></td>
+                    <td><?= htmlspecialchars($p['community_name']) ?></td>
+                    <td><span class="badge-type badge-<?= $p['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$p['type']] ?? $p['type'] ?></span></td>
+                    <td class="post-preview"><?php if($p['title']): ?><strong><?= htmlspecialchars(mb_substr($p['title'],0,30)) ?> — </strong><?php endif; ?><?= htmlspecialchars(mb_substr($p['content'],0,50)) ?>…</td>
+                    <td style="text-align:center;"><?= $p['likes'] ?></td>
+                    <td style="text-align:center;"><?= $p['comments'] ?></td>
+                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($p['created_at'])) ?></td>
+                    <td>
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');">
+                            <?php csrf_field(); ?>
+                            <input type="hidden" name="post_id" value="<?= $p['id'] ?>">
+                            <button type="submit" name="delete_post" class="btn-sm btn-danger">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
     </div>
 </main>
 
-<script>
-    // Just mock js for interactive feel when required
-</script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>

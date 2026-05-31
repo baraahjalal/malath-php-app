@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/csrf.php';
 include 'includes/header.php';
 include 'includes/db.php';
 
@@ -11,6 +12,7 @@ $last_name = '';
 $email = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    csrf_verify();
     $first_name = trim($_POST['first_name'] ?? '');
     $last_name  = trim($_POST['last_name'] ?? '');
     $email      = trim($_POST['email'] ?? '');
@@ -37,16 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             try {
                 $insert = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
                 $result = $insert->execute([$name, $email, $password_hash]);
-                
+
                 if($result) {
                     $success = "تم إنشاء الحساب بنجاح! سيتم توجيهك لصفحة الدخول...";
-                    // توجيه تلقائي بعد 3 ثواني لرؤية رسالة النجاح
-                 echo '<script>setTimeout(function(){ window.location.href = "login.php"; }, 3000);</script>';
+                    echo '<script>setTimeout(function(){ window.location.href = "login.php"; }, 3000);</script>';
                 } else {
                     $error = "حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.";
                 }
             } catch (PDOException $e) {
-                $error = "خطأ في قاعدة البيانات: " . $e->getMessage();
+                error_log("Register error: " . $e->getMessage());
+                $error = "حدث خطأ في الخادم، يرجى المحاولة لاحقاً.";
             }
         }
     }
@@ -187,6 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <?php endif; ?>
                 
                 <form action="register.php" method="POST">
+                    <?php csrf_field(); ?>
                     <div class="form-row">
                         <div class="input-group">
                             <label class="input-label">الاسم الأول</label>
