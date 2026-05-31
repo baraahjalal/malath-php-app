@@ -56,7 +56,7 @@ $saved_count = $stmt_saved->fetchColumn();
 // 5. جلب النشاطات (منشوراتي + ما أعجبت به + ما علقت عليه)
 $stmt_activities = $pdo->prepare("
     SELECT 
-        'post' COLLATE utf8mb4_unicode_ci AS activity_type, 
+        'post' COLLATE utf8mb4_unicode_ci AS activity_type,                   
         p.id AS activity_id, 
         p.created_at AS activity_date, 
         p.id AS post_id, 
