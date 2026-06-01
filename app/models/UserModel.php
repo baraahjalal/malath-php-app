@@ -11,6 +11,11 @@ class UserModel extends Model {
         return $st->fetch() ?: null;
     }
 
+    public function findById(int $id): ?array {
+        $st = $this->query("SELECT * FROM users WHERE id = ?", [$id]);
+        return $st->fetch() ?: null;
+    }
+
     public function create(string $name, string $email, string $passwordHash): int {
         $this->query(
             "INSERT INTO users (name, email, password, avatar) VALUES (?,?,?,?)",
