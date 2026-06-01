@@ -103,6 +103,16 @@ class ArticleModel extends Model {
         $this->query("UPDATE articles SET status = 'rejected' WHERE id = ?", [$id]);
     }
 
+    public function getArticleWithAuthor(int $id): ?array {
+        $row = $this->query("
+            SELECT a.id, a.title, u.name AS author_name, u.email AS author_email
+            FROM articles a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = ?
+        ", [$id])->fetch();
+        return $row ?: null;
+    }
+
     public function toggleSave(int $userId, int $articleId): bool {
         $exists = (int)$this->query(
             "SELECT COUNT(*) FROM bookmarks WHERE user_id = ? AND article_id = ?",
