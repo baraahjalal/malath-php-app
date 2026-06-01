@@ -274,10 +274,12 @@
         <b>انضمي لمجتمع أولاً لتتمكني من النشر فيه</b>
       </div>
     <?php else: ?>
-      <div class="create-post-box" style="text-align:center;">
-        <p>لتتمكني من النشر، قومي بتسجيل الدخول أو إنشاء حساب جديد.</p>
-        <a href="/malath-php-app/login?redirect=community.php" class="btn-primary">تسجيل الدخول</a>
-        <a href="/malath-php-app/register" class="btn-outline">إنشاء حساب جديد</a>
+      <div class="create-post-box" style="text-align:center; padding: 2.5rem 1.5rem;">
+        <h4 style="margin-bottom: 1.5rem; color: var(--secondary); font-weight: normal;">لتتمكني من النشر والتفاعل، يرجى تسجيل الدخول أو إنشاء حساب جديد.</h4>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+          <a href="/malath-php-app/login?redirect=community.php" class="btn-primary" style="padding: 0.6rem 1.5rem; border-radius: 2rem; text-decoration: none; font-weight: bold;">تسجيل الدخول</a>
+          <a href="/malath-php-app/register" class="btn-outline" style="padding: 0.6rem 1.5rem; border-radius: 2rem; border: 1px solid var(--primary); color: var(--primary); text-decoration: none; font-weight: bold; background: transparent;">إنشاء حساب جديد</a>
+        </div>
       </div>
     <?php endif; ?>
 

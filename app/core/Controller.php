@@ -31,7 +31,7 @@ abstract class Controller {
 
     protected function requireAuth(): void {
         if (!isset($_SESSION['user_id'])) {
-            $this->redirect('/malath-php-app/login.php');
+            $this->redirect('/malath-php-app/login');
         }
     }
 
@@ -40,7 +40,7 @@ abstract class Controller {
         if (($_SESSION['user_role'] ?? '') !== 'admin') {
             http_response_code(403);
             include __DIR__ . '/../../includes/header.php';
-            echo '<div style="text-align:center;padding:5rem;"><h2>403 — غير مصرح لك بالوصول</h2><a href="/malath-php-app/index.php" class="btn-login-outline" style="margin-top:1rem;">العودة للرئيسية</a></div>';
+            echo '<div style="text-align:center;padding:5rem;"><h2>403 — غير مصرح لك بالوصول</h2><a href="/malath-php-app/index" class="btn-login-outline" style="margin-top:1rem;">العودة للرئيسية</a></div>';
             include __DIR__ . '/../../includes/footer.php';
             exit;
         }

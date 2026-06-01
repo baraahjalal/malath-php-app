@@ -38,7 +38,7 @@ class ArticleController extends Controller {
 
     public function handleCreate(): void {
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /malath-php-app/login.php');
+            header('Location: /malath-php-app/login');
             exit;
         }
 
