@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توثيق مشروع ملاذ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', 'Times New Roman', serif;
+    font-size: 14pt;
+    line-height: 1.8;
+    color: #1a1a1a;
+    background: #fff;
+    direction: rtl;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 20px;
+    padding: 25mm 30mm 25mm 30mm;
+    background: white;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    page-break-after: always;
+  }
+
+  /* Cover Page */
+  .cover-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    border: 3px solid #8B1A4A;
+  }
+
+  .cover-header { text-align: center; margin-bottom: 2rem; }
+  .cover-header .logo { font-size: 50px; color: #8B1A4A; margin-bottom: 1rem; }
+  .cover-college { font-size: 20pt; font-weight: 800; color: #8B1A4A; margin-bottom: 0.5rem; }
+  .cover-dept { font-size: 15pt; font-weight: 700; color: #444; margin-bottom: 0.5rem; }
+  .cover-course { font-size: 13pt; color: #555; }
+
+  .cover-divider { width: 80%; height: 3px; background: linear-gradient(90deg, transparent, #8B1A4A, transparent); margin: 2rem auto; }
+
+  .cover-title-box {
+    background: linear-gradient(135deg, #8B1A4A, #C53A62);
+    color: white;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+  }
+  .cover-project-label { font-size: 12pt; opacity: 0.8; margin-bottom: 0.5rem; }
+  .cover-project-title { font-size: 32pt; font-weight: 900; letter-spacing: 2px; }
+  .cover-project-subtitle { font-size: 13pt; opacity: 0.9; margin-top: 0.5rem; }
+
+  .cover-footer { margin-top: 2rem; text-align: center; }
+  .cover-footer table { margin: 0 auto; border-collapse: collapse; min-width: 300px; }
+  .cover-footer td { padding: 10px 20px; border: 1px solid #ddd; font-size: 13pt; }
+  .cover-footer .label { background: #f5e6ec; font-weight: 700; color: #8B1A4A; }
+  .cover-year { font-size: 13pt; color: #555; margin-top: 2rem; }
+
+  /* Content Pages */
+  h1 { font-size: 22pt; font-weight: 900; color: #8B1A4A; border-bottom: 3px solid #8B1A4A; padding-bottom: 8px; margin-bottom: 1.5rem; margin-top: 0; }
+  h2 { font-size: 17pt; font-weight: 800; color: #8B1A4A; margin-top: 1.5rem; margin-bottom: 0.8rem; }
+  h3 { font-size: 14pt; font-weight: 700; color: #C53A62; margin-top: 1.2rem; margin-bottom: 0.5rem; }
+
+  p { margin-bottom: 1rem; text-align: justify; }
+
+  ul, ol { padding-right: 2rem; margin-bottom: 1rem; }
+  ul li, ol li { margin-bottom: 0.4rem; }
+
+  .section-num {
+    display: inline-block;
+    background: #8B1A4A;
+    color: white;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 50%;
+    margin-left: 10px;
+    font-weight: 800;
+    font-size: 13pt;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th { background: #8B1A4A; color: white; padding: 10px 14px; text-align: right; font-size: 13pt; }
+  td { border: 1px solid #ddd; padding: 9px 14px; font-size: 12pt; }
+  tr:nth-child(even) td { background: #fdf2f5; }
+  tr:hover td { background: #f5e6ec; }
+
+  .badge-green { background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 20px; font-size: 11pt; }
+  .badge-red   { background: #f8d7da; color: #721c24; padding: 3px 10px; border-radius: 20px; font-size: 11pt; }
+  .badge-blue  { background: #d1ecf1; color: #0c5460; padding: 3px 10px; border-radius: 20px; font-size: 11pt; }
+
+  .callout {
+    background: #fdf2f5;
+    border-right: 4px solid #8B1A4A;
+    padding: 14px 18px;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+
+  .callout-info {
+    background: #e7f3fe;
+    border-right: 4px solid #2196F3;
+  }
+
+  .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .tech-card {
+    border: 1px solid #e0b0bf;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fdf8fa;
+  }
+  .tech-card h4 { color: #8B1A4A; font-size: 12pt; margin-bottom: 0.5rem; }
+  .tech-card p { font-size: 11pt; margin: 0; }
+
+  .structure-box {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 1.2rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11pt;
+    line-height: 1.7;
+    direction: ltr;
+    text-align: left;
+    margin: 1rem 0;
+    overflow: auto;
+  }
+  .structure-box .dir  { color: #89dceb; }
+  .structure-box .file { color: #a6e3a1; }
+  .structure-box .comment { color: #6c7086; }
+
+  .code-box {
+    background: #282c34;
+    color: #abb2bf;
+    padding: 1rem 1.4rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    direction: ltr;
+    text-align: left;
+    margin: 1rem 0;
+    overflow: auto;
+  }
+  .code-box .kw  { color: #c678dd; }
+  .code-box .fn  { color: #61afef; }
+  .code-box .str { color: #98c379; }
+  .code-box .cmt { color: #5c6370; }
+
+  .sitemap { margin: 1rem 0; }
+  .sitemap-root {
+    background: #8B1A4A;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13pt;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .sitemap-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+  }
+  .sitemap-node {
+    background: #C53A62;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 11pt;
+    font-weight: 600;
+    min-width: 110px;
+  }
+  .sitemap-sub-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+  .sitemap-leaf {
+    background: #f5e6ec;
+    color: #8B1A4A;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 10pt;
+    border: 1px solid #e0b0bf;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  .er-table {
+    background: #fdf8fa;
+    border: 2px solid #C53A62;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .er-table-title {
+    background: #C53A62;
+    color: white;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 12pt;
+  }
+  .er-table table { margin: 0; }
+  .er-table th { background: #f5e6ec; color: #8B1A4A; font-size: 11pt; }
+  .er-table td { font-size: 11pt; }
+
+  .er-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .screenshot-placeholder {
+    background: #f8f9fa;
+    border: 2px dashed #C53A62;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: #8B1A4A;
+    margin: 1rem 0;
+    font-size: 12pt;
+  }
+  .screenshot-placeholder .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================
+     PAGE 1 — COVER PAGE
+     ============================ -->
+<div class="page cover-page">
+  <div class="cover-header">
+    <div class="logo">🌸</div>
+    <div class="cover-college">كلية الحاسب الآلي وتقنية المعلومات</div>
+    <div class="cover-dept">قسم علوم الحاسب / تقنية المعلومات</div>
+    <div class="cover-course">مقرر: برمجة الويب المتقدمة (Web Development)</div>
+  </div>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-title-box">
+    <div class="cover-project-label">مشروع التخرج</div>
+    <div class="cover-project-title">ملاذ</div>
+    <div class="cover-project-subtitle">Malath — منصة رقمية آمنة للمرأة</div>
+  </div>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-footer">
+    <table>
+      <tr>
+        <td class="label">اسم الطالب/الطالبة</td>
+        <td>براء حارثي</td>
+      </tr>
+      <tr>
+        <td class="label">الرقم الجامعي</td>
+        <td>________________</td>
+      </tr>
+      <tr>
+        <td class="label">اسم المشرف</td>
+        <td>________________</td>
+      </tr>
+      <tr>
+        <td class="label">الفصل الدراسي</td>
+        <td>الفصل الثاني — 1446هـ / 2026م</td>
+      </tr>
+    </table>
+    <div class="cover-year">العام الدراسي: 1445 – 1446 هـ</div>
+  </div>
+</div>
+
+<!-- ============================
+     PAGE 2 — TABLE OF CONTENTS
+     ============================ -->
+<div class="page">
+  <h1>فهرس المحتويات</h1>
+  <table>
+    <thead><tr><th>القسم</th><th>العنوان</th><th>الصفحة</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>مقدمة</td><td>3</td></tr>
+      <tr><td>2</td><td>فكرة المشروع</td><td>4</td></tr>
+      <tr><td>3</td><td>تحليل المتطلبات</td><td>5</td></tr>
+      <tr><td>4</td><td>تصميم النظام — خريطة الموقع وقاعدة البيانات</td><td>6</td></tr>
+      <tr><td>5</td><td>التقنيات المستخدمة</td><td>8</td></tr>
+      <tr><td>6</td><td>التنفيذ — كيفية بناء النظام</td><td>9</td></tr>
+      <tr><td>7</td><td>لقطات الشاشة</td><td>11</td></tr>
+      <tr><td>8</td><td>شرح واجهات المستخدم</td><td>12</td></tr>
+      <tr><td>9</td><td>التحديات والحلول</td><td>13</td></tr>
+      <tr><td>10</td><td>الاختبار</td><td>14</td></tr>
+      <tr><td>11</td><td>المراجع</td><td>15</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================
+     PAGE 3 — INTRODUCTION
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">1</span> مقدمة</h1>
+
+  <h2>وصف موجز للمشروع</h2>
+  <p>
+    مشروع <strong>"ملاذ"</strong> هو تطبيق ويب متكامل مبني بلغة <strong>PHP</strong> باستخدام نمط المعمارية <strong>MVC (Model-View-Controller)</strong>، يهدف إلى توفير منصة رقمية آمنة ومتخصصة للمرأة. تتيح المنصة للمستخدمات التواصل المجتمعي، قراءة المقالات المتخصصة، ومشاركة تجاربهن الشخصية ضمن بيئة داعمة وخالية من الأحكام.
+  </p>
+  <p>
+    يعمل المشروع على خادم محلي باستخدام <strong>XAMPP</strong> مع قاعدة بيانات <strong>MySQL</strong>، ويتضمن واجهة أمامية تفاعلية مبنية بـ HTML5 وCSS3 وJavaScript مع استخدام <strong>Fetch API</strong> للعمليات غير التزامنية.
+  </p>
+
+  <h2>أهمية المشروع</h2>
+  <div class="callout">
+    <p>
+      تعاني المرأة في كثير من الأحيان من شُح المساحات الرقمية الآمنة التي تناسب احتياجاتها وتحترم خصوصيتها. تبرز أهمية مشروع "ملاذ" في عدة محاور:
+    </p>
+    <ul>
+      <li><strong>الأثر الاجتماعي:</strong> يسد فراغاً حقيقياً بتوفير مجتمع رقمي نسائي آمن وموثوق.</li>
+      <li><strong>الأثر النفسي:</strong> يمنح المرأة مساحة للتعبير الحر عن مشاعرها دون خشية الحكم أو التنمر.</li>
+      <li><strong>الأثر المعرفي:</strong> يجمع محتوى متخصصاً في الصحة والنفس والدين والأكاديميا في مكان واحد.</li>
+      <li><strong>الأثر التقني:</strong> يُظهر تطبيقاً عملياً متكاملاً لأفضل معايير تطوير الويب الحديثة.</li>
+    </ul>
+  </div>
+
+  <h2>الهدف العام للمشروع</h2>
+  <p>
+    يهدف المشروع إلى بناء منصة ويب وظيفية متكاملة تجمع بين:
+  </p>
+  <ul>
+    <li>توفير مجتمع رقمي تفاعلي يتيح للمستخدمات النشر والتعليق والتفاعل.</li>
+    <li>إدارة محتوى مقالي بنظام مراجعة وموافقة إدارية.</li>
+    <li>نظام تسجيل دخول وإدارة حسابات مستخدمين مع صلاحيات متعددة.</li>
+    <li>لوحة تحكم شاملة للمدراء لمتابعة النظام وإدارة المحتوى والمستخدمين.</li>
+    <li>تطبيق أعلى معايير الأمان في تطوير تطبيقات الويب.</li>
+  </ul>
+</div>
+
+<!-- ============================
+     PAGE 4 — PROJECT IDEA
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">2</span> فكرة المشروع</h1>
+
+  <h2>وصف واضح للفكرة</h2>
+  <p>
+    <strong>"ملاذ"</strong> هو موقع اجتماعي ومعرفي موجّه للمرأة، يرتكز على أربعة محاور رئيسية:
+  </p>
+  <table>
+    <thead><tr><th>المحور</th><th>الوصف</th><th>المجتمع المرتبط</th></tr></thead>
+    <tbody>
+      <tr><td><strong>الصحة</strong></td><td>برامج العناية بالصحة الجسدية والتغذية</td><td>Health Community</td></tr>
+      <tr><td><strong>النفس</strong></td><td>الدعم النفسي والتعبير الآمن عن الذات</td><td>Psychology Community</td></tr>
+      <tr><td><strong>الدين</strong></td><td>محتوى ديني وسطي ومعتدل يعزز القيم الروحية</td><td>Religion Community</td></tr>
+      <tr><td><strong>الأكاديميا</strong></td><td>التمكين الأكاديمي والمهني وتحقيق الطموحات</td><td>Academic Community</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    يحتوي الموقع على ثلاثة أقسام رئيسية يصل إليها المستخدم عبر القائمة الرئيسية:
+  </p>
+  <ul>
+    <li><strong>قسم المجتمع:</strong> منشورات تفاعلية من نوع (تنفيس / طلب نصيحة / سؤال) مع إمكانية الإعجاب والتعليق والحفظ.</li>
+    <li><strong>قسم المقالات:</strong> مقالات متخصصة تمر بمرحلة مراجعة إدارية قبل النشر مع إمكانية الحفظ وعرض تفاصيل المقال.</li>
+    <li><strong>الصفحة الشخصية:</strong> لكل مستخدمة ملف شخصي يعرض إحصائياتها ونشاطاتها ومنشوراتها المحفوظة.</li>
+  </ul>
+
+  <h2>المشكلة التي يحلها المشروع</h2>
+  <div class="callout">
+    <strong>المشكلة:</strong> غياب منصات رقمية متخصصة وآمنة تلبي الاحتياجات الفريدة للمرأة بعيداً عن البيئات الاجتماعية العامة التي قد تكون مصدراً للضغط والحكم.
+  </div>
+  <p><strong>الحل الذي يقدمه ملاذ:</strong></p>
+  <ul>
+    <li>مجتمع مغلق ومتخصص يضمن خصوصية أعلى وتفاعل أكثر إيجابية.</li>
+    <li>محتوى منقّح ومعتمد يضمن الجودة والمصداقية عبر نظام الموافقة الإدارية.</li>
+    <li>تصميم مستوحى من ثقافة المرأة العربية بألوان دافئة وواجهة مريحة.</li>
+    <li>ميزات حفظ المحتوى المفضل للرجوع إليه لاحقاً.</li>
+  </ul>
+
+  <h2>المستخدمون المستهدفون</h2>
+  <table>
+    <thead><tr><th>الفئة</th><th>الدور في النظام</th><th>الصلاحيات</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>المستخدمة العادية</strong></td>
+        <td>عضوة في المنصة</td>
+        <td>قراءة المحتوى، النشر في المجتمعات، تقديم مقالات، تحرير ملفها الشخصي</td>
+      </tr>
+      <tr>
+        <td><strong>المديرة (Admin)</strong></td>
+        <td>مشرفة على المنصة</td>
+        <td>إدارة المستخدمين، الموافقة/رفض المقالات، حذف المنشورات المخالفة، عرض إحصائيات</td>
+      </tr>
+      <tr>
+        <td><strong>الزائرة (Guest)</strong></td>
+        <td>زائرة غير مسجلة</td>
+        <td>تصفح الصفحة الرئيسية وصفحة المقالات (قراءة فقط)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================
+     PAGE 5 — REQUIREMENTS ANALYSIS
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">3</span> تحليل المتطلبات</h1>
+
+  <h2>أولاً: المتطلبات الوظيفية (Functional Requirements)</h2>
+
+  <h3>نظام المصادقة (Authentication)</h3>
+  <ul>
+    <li>تسجيل مستخدم جديد باسم كامل وبريد إلكتروني وكلمة مرور.</li>
+    <li>تسجيل الدخول بالبريد الإلكتروني وكلمة المرور.</li>
+    <li>تسجيل الخروج وإنهاء الجلسة بشكل آمن.</li>
+    <li>التحقق من صحة البريد الإلكتروني وقوة كلمة المرور.</li>
+    <li>توجيه المستخدمين بعد تسجيل الدخول بناءً على الدور (مدير → لوحة التحكم، مستخدم → الصفحة المطلوبة).</li>
+  </ul>
+
+  <h3>نظام المجتمع (Community)</h3>
+  <ul>
+    <li>عرض قائمة المجتمعات المتاحة.</li>
+    <li>الانضمام إلى مجتمع أو مغادرته.</li>
+    <li>نشر منشور بأنواع مختلفة: تنفيس / طلب نصيحة / سؤال.</li>
+    <li>التعليق على المنشورات.</li>
+    <li>الإعجاب بمنشور وإلغاء الإعجاب.</li>
+    <li>حفظ منشور وإلغاء الحفظ.</li>
+    <li>حذف التعليقات.</li>
+  </ul>
+
+  <h3>نظام المقالات (Articles)</h3>
+  <ul>
+    <li>عرض المقالات المعتمدة مع الترقيم (Pagination).</li>
+    <li>تصفية المقالات حسب المجتمع.</li>
+    <li>تقديم مقال جديد مع رفع صورة غلاف.</li>
+    <li>حفظ المقال وإلغاء الحفظ (Bookmark).</li>
+    <li>عرض تفاصيل مقال كامل.</li>
+  </ul>
+
+  <h3>الملف الشخصي (Profile)</h3>
+  <ul>
+    <li>عرض بيانات المستخدمة وإحصائياتها.</li>
+    <li>تعديل الاسم والنبذة الشخصية.</li>
+    <li>رفع صورة شخصية جديدة.</li>
+    <li>تغيير كلمة المرور.</li>
+    <li>عرض المنشورات والنشاطات المحفوظة.</li>
+    <li>حذف وتعديل المنشورات الخاصة.</li>
+  </ul>
+
+  <h3>لوحة التحكم (Admin Dashboard)</h3>
+  <ul>
+    <li>عرض الإحصائيات العامة للموقع (مستخدمين، منشورات، تعليقات، إعجابات).</li>
+    <li>إدارة المستخدمين (عرض، حذف، تغيير الدور).</li>
+    <li>إدارة المنشورات (عرض، حذف).</li>
+    <li>مراجعة المقالات المعلّقة (قبول / رفض).</li>
+  </ul>
+
+  <h2>ثانياً: المتطلبات غير الوظيفية (Non-Functional Requirements)</h2>
+
+  <table>
+    <thead><tr><th>المتطلب</th><th>التفاصيل</th><th>التطبيق في المشروع</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>الأمان</strong></td>
+        <td>حماية من هجمات الويب الشائعة</td>
+        <td>Prepared Statements (SQL Injection)، htmlspecialchars (XSS)، CSRF Tokens، password_hash</td>
+      </tr>
+      <tr>
+        <td><strong>الأداء</strong></td>
+        <td>تحميل سريع وتفاعل فوري</td>
+        <td>Fetch API للعمليات غير التزامنية، Singleton Pattern لاتصال قاعدة البيانات</td>
+      </tr>
+      <tr>
+        <td><strong>سهولة الاستخدام</strong></td>
+        <td>واجهة بديهية وتجربة مستخدم ممتازة</td>
+        <td>تصميم عربي RTL، Glassmorphism، تأثيرات Hover، رسائل تأكيد/خطأ واضحة</td>
+      </tr>
+      <tr>
+        <td><strong>الاستجابية</strong></td>
+        <td>تعمل على جميع أحجام الشاشات</td>
+        <td>CSS Media Queries، Flexbox، Grid</td>
+      </tr>
+      <tr>
+        <td><strong>قابلية الصيانة</strong></td>
+        <td>كود منظم وسهل التطوير</td>
+        <td>MVC Architecture، Namespace، Autoloading</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================
+     PAGE 6 — SYSTEM DESIGN (SITEMAP)
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">4</span> تصميم النظام</h1>
+
+  <h2>خريطة الموقع (Site Map)</h2>
+
+  <div class="sitemap">
+    <div class="sitemap-root">ملاذ — الصفحة الرئيسية<br><small>/index</small></div>
+    <div style="text-align:center; color:#8B1A4A; font-size:20px; margin:5px 0;">↓</div>
+    <div class="sitemap-row">
+      <div class="sitemap-node">تسجيل الدخول<br><small>/login</small></div>
+      <div class="sitemap-node">إنشاء حساب<br><small>/register</small></div>
+      <div class="sitemap-node">المجتمع<br><small>/community</small></div>
+      <div class="sitemap-node">المقالات<br><small>/articles</small></div>
+      <div class="sitemap-node">الملف الشخصي<br><small>/profile</small></div>
+      <div class="sitemap-node">لوحة التحكم<br><small>/dashboard</small></div>
+    </div>
+    <div class="sitemap-sub-row">
+      <div class="sitemap-leaf">نشر منشور</div>
+      <div class="sitemap-leaf">الانضمام للمجتمع</div>
+      <div class="sitemap-leaf">مقال مفرد<br><small>/articles-single</small></div>
+      <div class="sitemap-leaf">تقديم مقال<br><small>/article-create</small></div>
+      <div class="sitemap-leaf">تعديل الملف</div>
+      <div class="sitemap-leaf">إدارة المستخدمين</div>
+      <div class="sitemap-leaf">مراجعة المقالات</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.5rem;">
+    <h3>المسارات الكاملة للتطبيق (Routes)</h3>
+    <table>
+      <thead><tr><th>المسار (URL)</th><th>النوع</th><th>المتحكم</th><th>الدالة</th></tr></thead>
+      <tbody>
+        <tr><td>/</td><td>GET</td><td>PageController</td><td>index()</td></tr>
+        <tr><td>/login</td><td>GET/POST</td><td>AuthController</td><td>showLogin / handleLogin</td></tr>
+        <tr><td>/register</td><td>GET/POST</td><td>AuthController</td><td>showRegister / handleRegister</td></tr>
+        <tr><td>/logout</td><td>GET</td><td>AuthController</td><td>logout()</td></tr>
+        <tr><td>/community</td><td>GET/POST</td><td>CommunityController</td><td>index / handlePost</td></tr>
+        <tr><td>/articles</td><td>GET</td><td>ArticleController</td><td>index()</td></tr>
+        <tr><td>/article-create</td><td>GET/POST</td><td>ArticleController</td><td>create / handleCreate</td></tr>
+        <tr><td>/articles-single</td><td>GET</td><td>ArticleController</td><td>show()</td></tr>
+        <tr><td>/profile</td><td>GET/POST</td><td>ProfileController</td><td>index / handlePostAction</td></tr>
+        <tr><td>/update_profile</td><td>POST</td><td>ProfileController</td><td>handleUpdate()</td></tr>
+        <tr><td>/dashboard</td><td>GET/POST</td><td>AdminController</td><td>index / handlePost</td></tr>
+        <tr><td>/about, /contact, /faq, /privacy, /terms</td><td>GET</td><td>PageController</td><td>صفحات ثابتة</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================
+     PAGE 7 — DATABASE DESIGN
+     ============================ -->
+<div class="page">
+  <h2>تصميم قاعدة البيانات (Database Design)</h2>
+
+  <h3>مخطط العلاقات (ER Diagram — الجداول والعلاقات)</h3>
+
+  <div class="er-grid">
+    <div class="er-table">
+      <div class="er-table-title">جدول users (المستخدمون)</div>
+      <table>
+        <tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr>
+        <tr><td>id</td><td>INT PK</td><td>المعرف الفريد</td></tr>
+        <tr><td>name</td><td>VARCHAR(100)</td><td>الاسم الكامل</td></tr>
+        <tr><td>email</td><td>VARCHAR(150) UNIQUE</td><td>البريد الإلكتروني</td></tr>
+        <tr><td>password</td><td>VARCHAR(255)</td><td>كلمة المرور (مشفرة)</td></tr>
+        <tr><td>avatar</td><td>VARCHAR(255)</td><td>مسار الصورة الشخصية</td></tr>
+        <tr><td>bio</td><td>TEXT</td><td>النبذة الشخصية</td></tr>
+        <tr><td>role</td><td>ENUM('user','admin')</td><td>دور المستخدم</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMP</td><td>تاريخ التسجيل</td></tr>
+      </table>
+    </div>
+
+    <div class="er-table">
+      <div class="er-table-title">جدول posts (المنشورات)</div>
+      <table>
+        <tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr>
+        <tr><td>id</td><td>INT PK</td><td>المعرف الفريد</td></tr>
+        <tr><td>user_id</td><td>INT FK → users</td><td>صاحب المنشور</td></tr>
+        <tr><td>community_id</td><td>INT FK → communities</td><td>المجتمع</td></tr>
+        <tr><td>type</td><td>ENUM</td><td>vent/advice/question</td></tr>
+        <tr><td>title</td><td>VARCHAR(255)</td><td>عنوان المنشور</td></tr>
+        <tr><td>content</td><td>TEXT</td><td>محتوى المنشور</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMP</td><td>تاريخ النشر</td></tr>
+      </table>
+    </div>
+
+    <div class="er-table">
+      <div class="er-table-title">جدول articles (المقالات)</div>
+      <table>
+        <tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr>
+        <tr><td>id</td><td>INT PK</td><td>المعرف الفريد</td></tr>
+        <tr><td>user_id</td><td>INT FK → users</td><td>كاتب المقال</td></tr>
+        <tr><td>community_id</td><td>INT FK → communities</td><td>التصنيف</td></tr>
+        <tr><td>title</td><td>VARCHAR(255)</td><td>عنوان المقال</td></tr>
+        <tr><td>content</td><td>TEXT</td><td>محتوى المقال</td></tr>
+        <tr><td>image</td><td>VARCHAR(255)</td><td>صورة الغلاف</td></tr>
+        <tr><td>status</td><td>ENUM</td><td>pending/approved/rejected</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMP</td><td>تاريخ التقديم</td></tr>
+      </table>
+    </div>
+
+    <div class="er-table">
+      <div class="er-table-title">جدول communities (المجتمعات)</div>
+      <table>
+        <tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr>
+        <tr><td>id</td><td>INT PK</td><td>المعرف الفريد</td></tr>
+        <tr><td>name</td><td>VARCHAR(100)</td><td>اسم المجتمع</td></tr>
+        <tr><td>slug</td><td>VARCHAR(100)</td><td>الرابط المختصر</td></tr>
+        <tr><td>description</td><td>TEXT</td><td>وصف المجتمع</td></tr>
+        <tr><td>icon</td><td>VARCHAR(50)</td><td>أيقونة Font Awesome</td></tr>
+      </table>
+    </div>
+
+    <div class="er-table">
+      <div class="er-table-title">جدول post_comments (التعليقات)</div>
+      <table>
+        <tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr>
+        <tr><td>id</td><td>INT PK</td><td>المعرف الفريد</td></tr>
+        <tr><td>post_id</td><td>INT FK → posts</td><td>المنشور المعلَّق عليه</td></tr>
+        <tr><td>user_id</td><td>INT FK → users</td><td>صاحب التعليق</td></tr>
+        <tr><td>content</td><td>TEXT</td><td>نص التعليق</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMP</td><td>تاريخ التعليق</td></tr>
+      </table>
+    </div>
+
+    <div class="er-table">
+      <div class="er-table-title">الجداول الربطية الأخرى</div>
+      <table>
+        <tr><th>الجدول</th><th>الوصف</th></tr>
+        <tr><td>post_likes</td><td>إعجابات المنشورات (user_id ↔ post_id)</td></tr>
+        <tr><td>post_saves</td><td>منشورات محفوظة (user_id ↔ post_id)</td></tr>
+        <tr><td>bookmarks</td><td>مقالات محفوظة (user_id ↔ article_id)</td></tr>
+        <tr><td>user_communities</td><td>انضمام المجتمعات (user_id ↔ community_id)</td></tr>
+        <tr><td>notifications</td><td>الإشعارات للمستخدمين</td></tr>
+        <tr><td>reports</td><td>بلاغات المحتوى المخالف</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>ملخص العلاقات بين الجداول</h3>
+  <ul>
+    <li><strong>users ← posts:</strong> مستخدم واحد يملك عدة منشورات (One-to-Many)</li>
+    <li><strong>users ← articles:</strong> مستخدم واحد يقدم عدة مقالات (One-to-Many)</li>
+    <li><strong>communities ← posts:</strong> مجتمع واحد يحتوي على عدة منشورات (One-to-Many)</li>
+    <li><strong>posts ← post_comments:</strong> منشور واحد له عدة تعليقات (One-to-Many)</li>
+    <li><strong>users ↔ communities (user_communities):</strong> علاقة Many-to-Many</li>
+    <li><strong>users ↔ posts (post_likes/post_saves):</strong> علاقة Many-to-Many</li>
+  </ul>
+</div>
+
+<!-- ============================
+     PAGE 8 — TECHNOLOGIES USED
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">5</span> التقنيات المستخدمة</h1>
+
+  <h2>لغات البرمجة</h2>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <h4>PHP 8.x (Back-End)</h4>
+      <p>اللغة الرئيسية للواجهة الخلفية. استُخدمت بأسلوب البرمجة الكائنية (OOP) مع Namespaces وAutoloading.</p>
+    </div>
+    <div class="tech-card">
+      <h4>JavaScript (ES2022)</h4>
+      <p>تفاعلية الواجهة الأمامية باستخدام Fetch API، إدارة DOM، والتحقق من المدخلات.</p>
+    </div>
+    <div class="tech-card">
+      <h4>HTML5</h4>
+      <p>بناء الهيكل الدلالي للصفحات مع استخدام العلامات الدلالية الحديثة.</p>
+    </div>
+    <div class="tech-card">
+      <h4>CSS3</h4>
+      <p>تنسيق الواجهات بـ Flexbox وGrid وMedium Queries وتأثيرات Glassmorphism.</p>
+    </div>
+    <div class="tech-card">
+      <h4>SQL (MySQL)</h4>
+      <p>لغة الاستعلامات لقاعدة البيانات مع Prepared Statements لمنع SQL Injection.</p>
+    </div>
+    <div class="tech-card">
+      <h4>PDO (PHP Data Objects)</h4>
+      <p>الطبقة التجريدية للتواصل مع قاعدة البيانات بشكل آمن ومعياري.</p>
+    </div>
+  </div>
+
+  <h2>الأدوات والبرمجيات</h2>
+  <table>
+    <thead><tr><th>الأداة</th><th>الاستخدام</th></tr></thead>
+    <tbody>
+      <tr><td><strong>XAMPP</strong></td><td>بيئة التطوير المحلية (Apache + MySQL + PHP)</td></tr>
+      <tr><td><strong>VS Code</strong></td><td>محرر الكود مع إضافات PHP وCSS</td></tr>
+      <tr><td><strong>phpMyAdmin</strong></td><td>إدارة قاعدة البيانات وتصميم الجداول</td></tr>
+      <tr><td><strong>Git</strong></td><td>التحكم في إصدارات الكود (Version Control)</td></tr>
+      <tr><td><strong>Font Awesome 6</strong></td><td>مكتبة الأيقونات المستخدمة في الواجهة</td></tr>
+      <tr><td><strong>Google Fonts (Tajawal)</strong></td><td>الخط العربي للواجهة</td></tr>
+    </tbody>
+  </table>
+
+  <h2>التقنيات والمفاهيم المطبقة</h2>
+  <table>
+    <thead><tr><th>التقنية/المفهوم</th><th>كيفية التطبيق</th></tr></thead>
+    <tbody>
+      <tr><td><strong>MVC Architecture</strong></td><td>فصل المنطق (Models) عن التوجيه (Controllers) عن العرض (Views)</td></tr>
+      <tr><td><strong>Fetch API (AJAX)</strong></td><td>عمليات الإعجاب والحفظ والإشعارات دون إعادة تحميل الصفحة</td></tr>
+      <tr><td><strong>Custom Router</strong></td><td>نظام توجيه مخصص يربط المسارات بالمتحكمات عبر .htaccess</td></tr>
+      <tr><td><strong>Singleton Pattern</strong></td><td>اتصال واحد بقاعدة البيانات طوال دورة حياة الطلب</td></tr>
+      <tr><td><strong>CSRF Protection</strong></td><td>رمز حماية فريد لكل نموذج إرسال لمنع هجمات Cross-Site Request Forgery</td></tr>
+      <tr><td><strong>Session Management</strong></td><td>إدارة جلسات المستخدمين مع session_regenerate_id() لمنع Session Fixation</td></tr>
+      <tr><td><strong>Responsive Design</strong></td><td>تصميم متجاوب يعمل على الجوال والتابلت والحاسوب</td></tr>
+      <tr><td><strong>File Upload</strong></td><td>رفع الصور الشخصية وصور المقالات مع التحقق من الامتداد</td></tr>
+      <tr><td><strong>OOP + Namespace</strong></td><td>هيكلية كائنية كاملة مع App\Controllers, App\Models, App\Core</td></tr>
+      <tr><td><strong>Pagination</strong></td><td>ترقيم الصفحات في قائمة المقالات (9 مقالات لكل صفحة)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================
+     PAGE 9 — IMPLEMENTATION
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">6</span> التنفيذ</h1>
+
+  <h2>هيكل المشروع (Project Structure)</h2>
+  <div class="structure-box">
+<span class="dir">malath-php-app/</span>
+├── <span class="dir">app/</span>
+│   ├── <span class="dir">core/</span>
+│   │   ├── <span class="file">Router.php</span>      <span class="comment">← الموجّه المخصص</span>
+│   │   ├── <span class="file">Controller.php</span>  <span class="comment">← الفئة الأساسية للمتحكمات</span>
+│   │   ├── <span class="file">Model.php</span>       <span class="comment">← الفئة الأساسية للنماذج</span>
+│   │   └── <span class="file">Database.php</span>    <span class="comment">← Singleton اتصال قاعدة البيانات</span>
+│   ├── <span class="dir">controllers/</span>
+│   │   ├── <span class="file">AuthController.php</span>
+│   │   ├── <span class="file">CommunityController.php</span>
+│   │   ├── <span class="file">ArticleController.php</span>
+│   │   ├── <span class="file">ProfileController.php</span>
+│   │   ├── <span class="file">AdminController.php</span>
+│   │   └── <span class="file">PageController.php</span>
+│   ├── <span class="dir">models/</span>
+│   │   ├── <span class="file">UserModel.php</span>
+│   │   ├── <span class="file">PostModel.php</span>
+│   │   ├── <span class="file">ArticleModel.php</span>
+│   │   ├── <span class="file">CommunityModel.php</span>
+│   │   └── <span class="file">AdminModel.php</span>
+│   └── <span class="dir">views/</span>
+│       ├── <span class="dir">auth/</span>       login.php, register.php
+│       ├── <span class="dir">articles/</span>   index.php, single.php, create.php
+│       ├── <span class="dir">community/</span>  index.php
+│       ├── <span class="dir">profile/</span>    index.php
+│       ├── <span class="dir">admin/</span>      index.php
+│       └── <span class="dir">pages/</span>      index.php, about.php, contact.php, faq.php
+├── <span class="dir">api/</span>              <span class="comment">← نقاط نهاية Fetch API</span>
+│   ├── <span class="file">toggle_like.php</span>
+│   ├── <span class="file">toggle_save.php</span>
+│   ├── <span class="file">submit_comment.php</span>
+│   ├── <span class="file">delete_comment.php</span>
+│   └── <span class="file">notifications.php</span>
+├── <span class="dir">includes/</span>
+│   ├── <span class="file">header.php</span> / <span class="file">footer.php</span>
+│   ├── <span class="file">csrf.php</span>       <span class="comment">← حماية CSRF</span>
+│   └── <span class="file">db.php</span>
+├── <span class="dir">assets/</span>           css/, js/, images/, uploads/
+├── <span class="file">.htaccess</span>         <span class="comment">← إعادة توجيه الطلبات للـ Router</span>
+└── <span class="file">index.php</span>         <span class="comment">← نقطة الدخول الرئيسية</span>
+  </div>
+
+  <h2>كيفية بناء النظام</h2>
+
+  <h3>1. نقطة الدخول والموجّه (Entry Point & Router)</h3>
+  <p>
+    يعيد ملف <code>.htaccess</code> توجيه جميع الطلبات إلى <code>index.php</code> الذي يُسجّل المسارات ويستدعي الـ Router لمطابقة الطلب الوارد مع المتحكم المناسب.
+  </p>
+
+  <h3>2. طبقة المتحكمات (Controllers Layer)</h3>
+  <p>
+    كل متحكم يرث من <code>App\Core\Controller</code> التي توفر دوال مشتركة مثل <code>view()</code> لعرض الـ Views و<code>redirect()</code> للتوجيه و<code>requireAuth()</code> / <code>requireAdmin()</code> للحماية.
+  </p>
+
+  <h3>3. طبقة النماذج (Models Layer)</h3>
+  <p>
+    كل نموذج يرث من <code>App\Core\Model</code> التي تحصل على اتصال PDO من <code>Database::getInstance()</code>. جميع الاستعلامات تستخدم Prepared Statements حصراً.
+  </p>
+
+  <h3>4. ربط الواجهة الأمامية بقاعدة البيانات</h3>
+  <p>
+    تتدفق البيانات كالتالي: الـ View تعرض HTML ← المستخدم يتفاعل ← POST/GET إلى الـ Router ← Controller يستدعي Model ← Model يستعلم MySQL ← Controller يمرر النتائج للـ View.
+  </p>
+
+  <p>مثال على عملية التسجيل:</p>
+  <div class="code-box">
+<span class="cmt">// 1. View: form submits POST to /register</span>
+<span class="cmt">// 2. AuthController::handleRegister()</span>
+\<span class="fn">csrf_verify</span>();  <span class="cmt">// التحقق من رمز CSRF</span>
+$<span class="kw">email</span> = <span class="fn">trim</span>($_POST[<span class="str">'email'</span>]);
+<span class="kw">if</span> (!<span class="fn">filter_var</span>($<span class="kw">email</span>, FILTER_VALIDATE_EMAIL)) { ... }
+
+<span class="cmt">// 3. UserModel::create() — Prepared Statement</span>
+$<span class="kw">hash</span> = <span class="fn">password_hash</span>($<span class="kw">password</span>, PASSWORD_DEFAULT);
+$<span class="kw">this</span>-><span class="fn">query</span>(<span class="str">"INSERT INTO users (name,email,password) VALUES (?,?,?)"</span>,
+    [$<span class="kw">name</span>, $<span class="kw">email</span>, $<span class="kw">hash</span>]);
+  </div>
+
+  <h3>5. نظام API للعمليات التفاعلية (Fetch API)</h3>
+  <p>
+    عمليات الإعجاب والحفظ تتم بدون إعادة تحميل الصفحة عبر JavaScript:
+  </p>
+  <div class="code-box">
+<span class="cmt">// JavaScript: toggle like</span>
+<span class="fn">fetch</span>(<span class="str">'/malath-php-app/api/toggle_like.php'</span>, {
+    method: <span class="str">'POST'</span>,
+    body: <span class="kw">new</span> <span class="fn">FormData</span>(<span class="fn">formEl</span>)
+}).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+  .<span class="fn">then</span>(data => {
+    <span class="cmt">// تحديث عداد الإعجاب في الواجهة</span>
+    countEl.textContent = data.likes_count;
+  });
+  </div>
+</div>
+
+<!-- ============================
+     PAGE 10 — SCREENSHOTS
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">7</span> لقطات الشاشة</h1>
+  <p style="color:#666; font-style: italic; margin-bottom: 1.5rem;">
+    الصفحات الرئيسية في المشروع مع شرح موجز لكل منها:
+  </p>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div>
+      <h3>1. الصفحة الرئيسية (Home Page)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">🏠</div>
+        <strong>الصفحة الرئيسية — ملاذ</strong><br>
+        <small>Hero section مع شعار المشروع وأزرار CTA<br>قسم ركائز ملاذ الأربعة</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>2. صفحة تسجيل الدخول (Login)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">🔐</div>
+        <strong>صفحة تسجيل الدخول</strong><br>
+        <small>نموذج الدخول مع رسائل الخطأ<br>حماية CSRF مدمجة</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>3. صفحة التسجيل (Register)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">📝</div>
+        <strong>صفحة إنشاء الحساب</strong><br>
+        <small>نموذج التسجيل مع التحقق من كلمة المرور<br>مؤشر قوة كلمة المرور</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>4. صفحة المجتمع (Community)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">👥</div>
+        <strong>صفحة المجتمع التفاعلي</strong><br>
+        <small>بطاقات المنشورات مع أزرار الإعجاب والتعليق والحفظ<br>قائمة المجتمعات على الجانب</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>5. صفحة المقالات (Articles)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">📰</div>
+        <strong>صفحة المقالات</strong><br>
+        <small>شبكة بطاقات المقالات المعتمدة<br>فلتر التصنيفات وترقيم الصفحات</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>6. لوحة التحكم (Admin Dashboard)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">⚙️</div>
+        <strong>لوحة تحكم المدير</strong><br>
+        <small>إحصائيات الموقع — إدارة المستخدمين<br>مراجعة المقالات المعلقة</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>7. الملف الشخصي (Profile)</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">👤</div>
+        <strong>صفحة الملف الشخصي</strong><br>
+        <small>بيانات المستخدم وإحصائياتها<br>تبويبات النشاطات والمحفوظات</small>
+      </div>
+    </div>
+
+    <div>
+      <h3>8. تقديم مقال جديد</h3>
+      <div class="screenshot-placeholder">
+        <div class="icon">✍️</div>
+        <strong>نموذج تقديم المقال</strong><br>
+        <small>حقول العنوان والمحتوى والتصنيف<br>رفع صورة الغلاف</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout-info callout" style="margin-top: 1.5rem;">
+    <strong>ملاحظة:</strong> يمكن الوصول للموقع محلياً عبر: <code>http://localhost/malath-php-app/</code> بعد تشغيل XAMPP.
+    لعرض لقطات الشاشة الفعلية، افتح الرابط في المتصفح واستخدم أداة لقطة الشاشة.
+  </div>
+</div>
+
+<!-- ============================
+     PAGE 11 — UI EXPLANATION
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">8</span> شرح واجهات المستخدم</h1>
+
+  <h2>1. الصفحة الرئيسية (Landing Page)</h2>
+  <p>
+    تحتوي على Hero Section بتصميم تدريجي (Gradient) مع صورة جانبية وأزرار للانتقال للمجتمع أو اكتشاف البرامج. أسفلها قسم "ركائز ملاذ الأربعة" يعرض بطاقات تفاعلية Hover للمحاور الأربعة (صحة، نفس، دين، أكاديميا).
+  </p>
+
+  <h2>2. نظام المصادقة</h2>
+  <p>
+    واجهات تسجيل الدخول والتسجيل مبنية بنموذج مركزي على خلفية تدريجية. تظهر رسائل الخطأ باللون الأحمر مباشرة تحت الحقل المعني. عند إنشاء حساب ناجح، يظهر إشعار أخضر ويتم التوجيه تلقائياً لصفحة الدخول.
+  </p>
+  <p><strong>تفاعل المستخدم:</strong> ملء الحقول ← ضغط "تسجيل" ← التحقق من البيانات ← رسالة نجاح أو خطأ.</p>
+
+  <h2>3. صفحة المجتمع</h2>
+  <p>
+    تنقسم إلى شريط جانبي يسار يحتوي قائمة المجتمعات مع أزرار الانضمام/المغادرة، والمنطقة الرئيسية تعرض المنشورات. كل بطاقة منشور تحتوي على صورة المستخدمة والاسم والتاريخ والمحتوى وأزرار (إعجاب ❤️، تعليق 💬، حفظ 🔖). النقر على "تعليق" يكشف قسم التعليقات دون تحميل الصفحة.
+  </p>
+  <p><strong>تفاعل المستخدم:</strong> الضغط على ❤️ يستدعي Fetch API فوراً ويحدث عداد الإعجاب دون أي تحميل.</p>
+
+  <h2>4. صفحة المقالات</h2>
+  <p>
+    شبكة من بطاقات المقالات (3 أعمدة على الشاشة الكبيرة) مع صورة الغلاف والعنوان والكاتب والتاريخ والتصنيف. في الأعلى شريط تصفية حسب المجتمع، وفي الأسفل أزرار الترقيم. النقر على مقال يفتح صفحة مفردة كاملة.
+  </p>
+
+  <h2>5. لوحة التحكم (Admin Dashboard)</h2>
+  <p>
+    مقسمة إلى أربعة تبويبات عبر Query Parameter:
+  </p>
+  <ul>
+    <li><strong>Overview:</strong> بطاقات إحصائية (إجمالي المستخدمين، المنشورات، التعليقات، الإعجابات) + آخر المنشورات والمستخدمين.</li>
+    <li><strong>المستخدمون:</strong> جدول بجميع المستخدمين مع خيار الحذف وتغيير الدور.</li>
+    <li><strong>المنشورات:</strong> جدول المنشورات مع خيار الحذف.</li>
+    <li><strong>المقالات:</strong> قائمة المقالات المعلقة مع أزرار "قبول" و"رفض".</li>
+  </ul>
+
+  <h2>6. الملف الشخصي</h2>
+  <p>
+    يظهر في الأعلى بيانات المستخدمة مع صورتها وإحصائياتها (عدد المساهمات، المحفوظات). أسفله تبويبان:
+  </p>
+  <ul>
+    <li><strong>نشاطاتي:</strong> سجل المنشورات والتعليقات والإعجابات.</li>
+    <li><strong>المحفوظات:</strong> المنشورات والمقالات المحفوظة.</li>
+  </ul>
+  <p>يمكن تحرير بيانات الملف الشخصي عبر نموذج منبثق يشمل تغيير الصورة والاسم والنبذة وكلمة المرور.</p>
+</div>
+
+<!-- ============================
+     PAGE 12 — CHALLENGES & SOLUTIONS
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">9</span> التحديات والحلول</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>التحدي</th>
+        <th>المشكلة</th>
+        <th>الحل المطبق</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>تطبيق MVC من الصفر</strong></td>
+        <td>بناء نظام Router مخصص يربط المسارات بالمتحكمات دون استخدام Framework جاهز</td>
+        <td>كتابة Router Class تستقبل GET/POST ومطابقة URI بعد تنظيفه من prefix المشروع، مع ملف .htaccess لتوجيه جميع الطلبات لـ index.php</td>
+      </tr>
+      <tr>
+        <td><strong>حماية CSRF</strong></td>
+        <td>نماذج POST عرضة لهجمات Cross-Site Request Forgery</td>
+        <td>بناء ملف csrf.php مخصص يولد رمزاً عشوائياً 32 بايت لكل جلسة، يُدمج في كل نموذج POST ويتحقق منه قبل أي معالجة</td>
+      </tr>
+      <tr>
+        <td><strong>رفع الملفات بأمان</strong></td>
+        <td>رفع صور المستخدمين قد يسمح برفع ملفات PHP ضارة</td>
+        <td>التحقق من امتداد الملف (jpg/jpeg/png/webp فقط)، وتغيير اسم الملف تلقائياً باستخدام user_id + timestamp</td>
+      </tr>
+      <tr>
+        <td><strong>عمليات Fetch API (AJAX)</strong></td>
+        <td>إجراء الإعجاب والحفظ دون تحميل الصفحة مع الحفاظ على الأمان</td>
+        <td>بناء نقاط نهاية API منفصلة في مجلد api/، ترجع JSON وتتحقق من الجلسة وCSRF في كل طلب</td>
+      </tr>
+      <tr>
+        <td><strong>تصميم RTL متكامل</strong></td>
+        <td>CSS الافتراضي مبني لـ LTR وكثير من المكتبات لا تدعم RTL بالكامل</td>
+        <td>كتابة جميع CSS يدوياً مع dir="rtl" على HTML وتعديل padding/margin/flexbox لتناسب العربية</td>
+      </tr>
+      <tr>
+        <td><strong>نظام الأدوار (Roles)</strong></td>
+        <td>منع المستخدم العادي من الوصول لصفحات المدير</td>
+        <td>دالة requireAdmin() في Base Controller تتحقق من $_SESSION['user_role'] وترفض الوصول بـ 403 إذا لم يكن المستخدم مديراً</td>
+      </tr>
+      <tr>
+        <td><strong>نظام إشعارات فوري</strong></td>
+        <td>إظهار عدد الإشعارات الجديدة في الهيدر دون تحميل الصفحة</td>
+        <td>استدعاء api/notifications.php دورياً بـ setInterval من JavaScript يرجع عدد الإشعارات غير المقروءة</td>
+      </tr>
+      <tr>
+        <td><strong>ترقيم صفحات المقالات</strong></td>
+        <td>عرض مئات المقالات دفعة واحدة يبطئ الصفحة</td>
+        <td>LIMIT/OFFSET في استعلام SQL مع حساب totalPages وعرض أزرار الصفحات السابقة/التالية</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================
+     PAGE 13 — TESTING
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">10</span> الاختبار</h1>
+
+  <h2>طرق الاختبار المستخدمة</h2>
+  <p>
+    تم اعتماد أسلوب <strong>الاختبار اليدوي (Manual Testing)</strong> على متصفح Chrome مع استخدام أدوات المطور (DevTools) لمراقبة طلبات الشبكة وأخطاء JavaScript.
+  </p>
+
+  <h2>نتائج الاختبار — حالات الاختبار (Test Cases)</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>حالة الاختبار</th>
+        <th>المدخلات</th>
+        <th>النتيجة المتوقعة</th>
+        <th>النتيجة الفعلية</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>تسجيل حساب جديد صحيح</td>
+        <td>بيانات صحيحة كاملة</td>
+        <td>إنشاء الحساب + توجيه للدخول</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>تسجيل ببريد مستخدم سابقاً</td>
+        <td>بريد مكرر</td>
+        <td>رسالة خطأ "البريد مستخدم"</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>تسجيل بكلمة مرور قصيرة</td>
+        <td>كلمة مرور 4 أحرف</td>
+        <td>رسالة خطأ "6 أحرف على الأقل"</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>تسجيل الدخول ببيانات صحيحة</td>
+        <td>بريد + كلمة مرور صحيحة</td>
+        <td>توجيه للصفحة المطلوبة</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>تسجيل الدخول ببيانات خاطئة</td>
+        <td>كلمة مرور خاطئة</td>
+        <td>رسالة خطأ المصادقة</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>نشر منشور في المجتمع</td>
+        <td>محتوى منشور صحيح</td>
+        <td>ظهور المنشور فور إرساله</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>الإعجاب بمنشور (AJAX)</td>
+        <td>ضغط زر الإعجاب</td>
+        <td>تحديث العداد فوراً دون تحميل</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>حفظ منشور ثم إلغاء الحفظ</td>
+        <td>ضغط زر الحفظ مرتين</td>
+        <td>toggle صحيح للحالة</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>تقديم مقال جديد</td>
+        <td>عنوان + محتوى + تصنيف</td>
+        <td>حالة "pending" في لوحة التحكم</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>قبول مقال من لوحة التحكم</td>
+        <td>ضغط "قبول" على مقال معلق</td>
+        <td>ظهور المقال في صفحة المقالات</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>تحديث الملف الشخصي</td>
+        <td>اسم جديد + صورة</td>
+        <td>تحديث البيانات وعرض رسالة نجاح</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td>محاولة الوصول للوحة التحكم كمستخدم</td>
+        <td>URL مباشر /dashboard</td>
+        <td>رفض الوصول 403</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td>حقن SQL في نموذج الدخول</td>
+        <td>' OR '1'='1</td>
+        <td>فشل تسجيل الدخول (Prepared Stmt)</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td>حقن XSS في منشور</td>
+        <td>&lt;script&gt;alert('xss')&lt;/script&gt;</td>
+        <td>عرض النص حرفياً بدون تنفيذ</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td>تصفح الموقع على الجوال</td>
+        <td>شاشة 375px</td>
+        <td>تصميم متجاوب كامل</td>
+        <td><span class="badge-green">نجح</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>الأخطاء التي تم اكتشافها وإصلاحها</h2>
+  <ul>
+    <li><strong>مسار Router:</strong> كان المشروع يعمل على مسار متداخل (/malath-php-app/) مما يسبب اختلافاً في URI — تم حله بتنظيف الـ URI في Router::dispatch().</li>
+    <li><strong>إرسال النماذج:</strong> بعض النماذج القديمة كانت تحتوي على .php في action — تم توحيدها لتعمل مع المسارات الجديدة.</li>
+    <li><strong>CSRF في API:</strong> نقاط API لا تستخدم CSRF بالطريقة التقليدية — تم التحقق من الجلسة بدلاً منه.</li>
+  </ul>
+</div>
+
+<!-- ============================
+     PAGE 14 — REFERENCES
+     ============================ -->
+<div class="page">
+  <h1><span class="section-num">11</span> المراجع</h1>
+
+  <h2>المواقع الإلكترونية</h2>
+  <ol>
+    <li>
+      <strong>PHP Official Documentation</strong><br>
+      php.net — مرجع اللغة الرسمي للدوال، Classes، PDO، Sessions.
+    </li>
+    <li>
+      <strong>MDN Web Docs (Mozilla)</strong><br>
+      developer.mozilla.org — مرجع HTML5، CSS3، JavaScript، Fetch API.
+    </li>
+    <li>
+      <strong>W3Schools</strong><br>
+      w3schools.com — أمثلة تطبيقية على PHP، MySQL، CSS Flexbox/Grid.
+    </li>
+    <li>
+      <strong>Stack Overflow</strong><br>
+      stackoverflow.com — حل المشكلات البرمجية والاستفسارات التقنية.
+    </li>
+    <li>
+      <strong>OWASP (Open Web Application Security Project)</strong><br>
+      owasp.org — معايير أمان تطبيقات الويب، الحماية من SQL Injection وXSS وCSRF.
+    </li>
+    <li>
+      <strong>Font Awesome</strong><br>
+      fontawesome.com — مكتبة الأيقونات المستخدمة في الواجهة.
+    </li>
+    <li>
+      <strong>Google Fonts</strong><br>
+      fonts.google.com — خط Tajawal العربي.
+    </li>
+  </ol>
+
+  <h2>الكتب والمراجع الأكاديمية</h2>
+  <ol>
+    <li>
+      <strong>PHP & MySQL: Novice to Ninja</strong> — Tom Butler & Kevin Yank (SitePoint, 2022)<br>
+      مرجع شامل لبناء تطبيقات الويب بـ PHP وMySQL من الصفر حتى الاحتراف.
+    </li>
+    <li>
+      <strong>Learning PHP, MySQL & JavaScript</strong> — Robin Nixon (O'Reilly, 7th ed.)<br>
+      شامل للتقنيات الثلاث مع تطبيقات عملية.
+    </li>
+    <li>
+      <strong>Clean Code</strong> — Robert C. Martin (Prentice Hall)<br>
+      مبادئ كتابة كود نظيف ومنظم وسهل الصيانة.
+    </li>
+  </ol>
+
+  <h2>الدروس التعليمية (Tutorials)</h2>
+  <ol>
+    <li>
+      <strong>PHP MVC Framework from Scratch</strong> — Traversy Media (YouTube)<br>
+      سلسلة بناء نظام MVC كامل بدون Framework.
+    </li>
+    <li>
+      <strong>Modern PHP Tutorial</strong> — Laracasts<br>
+      أحدث ميزات PHP 8 مع OOP وNamespaces.
+    </li>
+    <li>
+      <strong>CSS Grid & Flexbox Fundamentals</strong> — Kevin Powell (YouTube)<br>
+      تصميم متجاوب احترافي بـ CSS حديث.
+    </li>
+  </ol>
+
+  <div class="callout" style="margin-top: 2rem; text-align: center;">
+    <strong>— نهاية التوثيق —</strong><br>
+    <span style="color: #C53A62;">مشروع ملاذ | 1446هـ / 2026م</span>
+  </div>
+</div>
+
+</body>
+</html>
