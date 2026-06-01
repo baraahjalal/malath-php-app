@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase /malath-php-app/
+
+# Allow existing directories and files (like assets/, api/) to bypass the router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route all other requests to index.php
+RewriteRule ^(.*)$ index.php [QSA,L]

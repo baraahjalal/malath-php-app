@@ -79,7 +79,7 @@
         <div class="tab-content active animate-fade-in-up" id="personal-info">
             <div class="card" style="max-width:800px; margin:0 auto; border-radius:2rem;">
                 <h3 class="font-headline font-bold text-primary-dark" style="font-size:1.4rem; margin-bottom:1.5rem;">تعديل الملف الشخصي</h3>
-                <form action="/malath-php-app/update_profile.php" method="POST" enctype="multipart/form-data">
+                <form action="/malath-php-app/update_profile" method="POST" enctype="multipart/form-data">
                     <?php csrf_field(); ?>
                     <div class="profile-avatar-large" style="margin-bottom:2rem;">
                         <img src="<?= !empty($user['avatar']) ? htmlspecialchars($user['avatar']) : 'assets/images/default-avatar.png' ?>" id="avatar-preview" alt="Profile">
@@ -166,14 +166,14 @@
                                 <?php if ($act['activity_type'] === 'post'): ?>
                                 <div class="post-actions-crud">
                                     <button type="button" onclick="toggleEditForm(<?=$act['post_id']?>)" class="btn-crud-edit"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
-                                    <form method="POST" action="/malath-php-app/profile.php" style="display:inline;" onsubmit="return confirm('هل أنتِ متأكدة من مسح هذا المنشور؟');">
+                                    <form method="POST" action="/malath-php-app/profile" style="display:inline;" onsubmit="return confirm('هل أنتِ متأكدة من مسح هذا المنشور؟');">
                                         <?php csrf_field(); ?>
                                         <input type="hidden" name="delete_post_id" value="<?=$act['post_id']?>">
                                         <button type="submit" class="btn-crud-delete"><i class="fa-solid fa-trash"></i> مسح</button>
                                     </form>
                                 </div>
                                 <div id="edit-form-<?=$act['post_id']?>" style="display:none; margin-top:1rem; border-top:1px solid var(--outline-variant); padding-top:1rem;">
-                                    <form method="POST" action="/malath-php-app/profile.php">
+                                    <form method="POST" action="/malath-php-app/profile">
                                         <?php csrf_field(); ?>
                                         <input type="hidden" name="edit_post_id" value="<?=$act['post_id']?>">
                                         <textarea name="edit_content" required style="width:100%; min-height:80px; padding:0.8rem 1.2rem; border-radius:1rem; border:1px solid var(--outline-variant); margin-bottom:0.5rem; font-family:inherit; font-size:0.95rem; background-color:var(--surface-container-high); resize:none;"><?=htmlspecialchars($act['post_content'])?></textarea>
@@ -185,7 +185,7 @@
                                 </div>
                                 <?php else: ?>
                                     <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--outline-variant); text-align:left;">
-                                        <a href="/malath-php-app/community.php?c=all#post-<?=$act['post_id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">عرض المنشور في المجتمع</a>
+                                        <a href="/malath-php-app/community?c=all#post-<?=$act['post_id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">عرض المنشور في المجتمع</a>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -195,7 +195,7 @@
                     <div style="text-align:center; padding:4rem 0;">
                         <i class="fa-solid fa-chart-line" style="font-size:3rem; color:var(--outline-variant); margin-bottom:1rem;"></i>
                         <h3 style="color:var(--secondary);">لا توجد أي نشاطات بعد.</h3>
-                        <a href="/malath-php-app/community.php" class="btn-outline" style="margin-top:1rem; display:inline-block;">اذهبي للمجتمع وشاركي الآن</a>
+                        <a href="/malath-php-app/community" class="btn-outline" style="margin-top:1rem; display:inline-block;">اذهبي للمجتمع وشاركي الآن</a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -222,7 +222,7 @@
                             <?php if($post['title']): ?><h3 style="margin-bottom:.6rem;"><?=htmlspecialchars($post['title'])?></h3><?php endif;?>
                             <div class="post-content"><?=nl2br(htmlspecialchars(mb_substr($post['content'],0,150)))?>...</div>
                             <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--outline-variant); text-align:left;">
-                                <a href="/malath-php-app/community.php?c=all#post-<?=$post['id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">الذهاب للمنشور</a>
+                                <a href="/malath-php-app/community?c=all#post-<?=$post['id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">الذهاب للمنشور</a>
                             </div>
                         </div>
                     <?php endforeach; ?>

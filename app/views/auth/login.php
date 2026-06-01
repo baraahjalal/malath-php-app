@@ -180,7 +180,7 @@
                 </div>
                 <?php endif; ?>
 
-                <form action="/malath-php-app/login.php" method="POST">
+                <form action="/malath-php-app/login" method="POST">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($redirect_to); ?>">
                     <div class="input-group">
@@ -217,7 +217,7 @@
                 <div class="separator"><span>أو</span></div>
                 <div style="text-align: center;">
                     <p style="color: var(--secondary); margin-bottom: 1rem;">ليس لديكِ حساب بعد؟</p>
-                    <a href="/malath-php-app/register.php" class="btn-outline" style="display: block;
+                    <a href="/malath-php-app/register" class="btn-outline" style="display: block;
                             text-decoration: none;
                             text-align: center;">
                         إنشاء حساب جديد

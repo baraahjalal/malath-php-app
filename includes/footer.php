@@ -5,10 +5,10 @@
         <div class="font-headline font-bold text-primary" style="font-size: 2.25rem;">ملاذ</div>
         
         <div class="footer-links font-body">
-            <a href="privacy.php" class="footer-link">سياسة الخصوصية</a>
-            <a href="terms.php" class="footer-link">شروط الاستخدام</a>
-            <a href="contact.php" class="footer-link">تواصل معنا</a>
-            <a href="faq.php" class="footer-link">الأسئلة الشائعة</a>
+            <a href="/malath-php-app/privacy" class="footer-link">سياسة الخصوصية</a>
+            <a href="/malath-php-app/terms" class="footer-link">شروط الاستخدام</a>
+            <a href="/malath-php-app/contact" class="footer-link">تواصل معنا</a>
+            <a href="/malath-php-app/faq" class="footer-link">الأسئلة الشائعة</a>
         </div>
         
         <div class="social-links">

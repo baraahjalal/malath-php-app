@@ -8,11 +8,11 @@ class AuthController extends Controller {
 
     public function showLogin(): void {
         if (isset($_SESSION['user_id'])) {
-            $this->redirect('/malath-php-app/index.php');
+            $this->redirect('/malath-php-app/index');
         }
-        $allowed     = ['index.php','community.php','profile.php','article.php'];
-        $raw         = $_GET['redirect'] ?? 'index.php';
-        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index.php';
+        $allowed     = ['index','community','profile','articles'];
+        $raw         = $_GET['redirect'] ?? 'index';
+        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index';
         $error       = '';
         $email       = '';
         $this->view('auth.login', compact('error', 'email', 'redirect_to'));
@@ -23,9 +23,9 @@ class AuthController extends Controller {
         $model    = new UserModel();
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $allowed  = ['index.php','community.php','profile.php','article.php'];
-        $raw      = $_POST['redirect_to'] ?? ($_GET['redirect'] ?? 'index.php');
-        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index.php';
+        $allowed  = ['index','community','profile','articles'];
+        $raw      = $_POST['redirect_to'] ?? ($_GET['redirect'] ?? 'index');
+        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index';
 
         $error = '';
         if (empty($email) || empty($password)) {
@@ -37,7 +37,7 @@ class AuthController extends Controller {
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'] ?? 'user';
-                $dest = ($_SESSION['user_role'] === 'admin') ? 'dashboard.php' : $redirect_to;
+                $dest = ($_SESSION['user_role'] === 'admin') ? 'dashboard' : $redirect_to;
                 $this->redirect('/malath-php-app/' . $dest);
             } else {
                 $error = "خطأ في البريد الإلكتروني أو كلمة المرور.";
@@ -85,6 +85,6 @@ class AuthController extends Controller {
     public function logout(): void {
         session_unset();
         session_destroy();
-        $this->redirect('/malath-php-app/index.php');
+        $this->redirect('/malath-php-app/index');
     }
 }

@@ -7,7 +7,7 @@
     
     <div class="sidebar-nav">
         <!-- Replace FontAwesome icons to match navigation -->
-        <a href="dashboard.php" class="admin-nav-link active">
+        <a href="/malath-php-app/dashboard" class="admin-nav-link active">
             <i class="fa-solid fa-chart-line"></i>
             <span>لوحة التحكم</span>
         </a>
@@ -41,7 +41,7 @@
             <i class="fa-solid fa-gear"></i>
             <span>الإعدادات</span>
         </a>
-        <a href="index.php" class="admin-nav-link" style="color: var(--error);">
+        <a href="/malath-php-app/index" class="admin-nav-link" style="color: var(--error);">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
             <span>تسجيل الخروج</span>
         </a>

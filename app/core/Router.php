@@ -17,6 +17,10 @@ class Router {
         $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $uri    = '/' . trim(str_replace('/malath-php-app', '', $uri), '/');
 
+        // تنظيف الروابط القديمة من امتداد .php لتعمل بسلاسة مع الـ MVC
+        $uri = preg_replace('/\.php$/', '', $uri);
+        if ($uri === '/index') $uri = '/'; // توحيد مسار الرئيسية
+
         if (isset($this->routes[$method][$uri])) {
             call_user_func($this->routes[$method][$uri]);
             return;

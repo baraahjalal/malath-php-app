@@ -215,10 +215,10 @@
                 <br>سنُعلمك عند نشرها إن شاء الله.
             </p>
             <div class="create-success-actions">
-                <a href="/malath-php-app/articles.php" class="btn-outline" style="text-decoration:none;">
+                <a href="/malath-php-app/articles" class="btn-outline" style="text-decoration:none;">
                     تصفّح المقالات
                 </a>
-                <a href="/malath-php-app/article-create.php" class="btn-primary" style="text-decoration:none;">
+                <a href="/malath-php-app/article-create" class="btn-primary" style="text-decoration:none;">
                     اكتبي مقالة أخرى
                 </a>
             </div>
@@ -246,7 +246,7 @@
         </ul>
         <?php endif; ?>
 
-        <form method="POST" action="/malath-php-app/article-create.php" enctype="multipart/form-data"
+        <form method="POST" action="/malath-php-app/article-create" enctype="multipart/form-data"
               id="create-article-form">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_generate()) ?>">
 

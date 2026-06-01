@@ -18,6 +18,7 @@ if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
     echo json_encode(['success' => false, 'error' => 'csrf']); exit;
 }
 
+
 $comment_id = intval($_POST['comment_id'] ?? 0);
 $user_id    = (int)$_SESSION['user_id'];
 

@@ -49,39 +49,66 @@
         .badge-question{ background:#e0f2fe; color:#0284c7; }
         .badge-article { background:var(--primary-container); color:var(--primary-dark); }
         .post-preview { max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--secondary); font-size:.9rem; }
+        
+        /* Admin Responsiveness */
+        .admin-menu-toggle { display:none; background:none; border:none; color:var(--primary); font-size:1.5rem; cursor:pointer; }
+        .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .admin-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:45; display:none; opacity:0; transition:opacity 0.3s; }
+        .admin-overlay.active { display:block; opacity:1; }
+
+        @media (max-width: 1024px) {
+            .admin-sidebar { right:-17rem; transition:right 0.3s ease; z-index:50; }
+            .admin-sidebar.active { right:0; }
+            .admin-main { margin-right:0; }
+            .admin-menu-toggle { display:block; margin-left:1rem; }
+            .stats-grid { grid-template-columns:repeat(2,1fr); }
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns:1fr; }
+            .dashboard-content { padding:1.5rem 1rem; }
+            .admin-header { padding:0 1rem; }
+            .search-box { flex-direction:column; padding:1rem; }
+            .data-card-header { padding:1rem; flex-direction:column; gap:1rem; align-items:flex-start; }
+            .data-table th, .data-table td { padding:0.8rem; font-size:0.85rem; }
+        }
     </style>
 </head>
 <body>
 
+<div class="admin-overlay" id="adminOverlay"></div>
+
 <aside class="admin-sidebar">
     <div class="sidebar-header">
-        <a href="/malath-php-app/index.php" class="font-headline font-black text-primary" style="font-size:2.2rem;text-decoration:none;">ملاذ</a>
+        <a href="/malath-php-app/index" class="font-headline font-black text-primary" style="font-size:2.2rem;text-decoration:none;">ملاذ</a>
         <div style="font-size:.8rem;color:var(--secondary);margin-top:.2rem;">لوحة التحكم</div>
     </div>
     <nav class="sidebar-nav">
-        <a href="/malath-php-app/dashboard.php?tab=overview" class="admin-nav-link <?= $tab==='overview'?'active':'' ?>"><i class="fa-solid fa-house"></i> الإحصائيات</a>
-        <a href="/malath-php-app/dashboard.php?tab=users"    class="admin-nav-link <?= $tab==='users'?'active':'' ?>"><i class="fa-solid fa-users"></i> إدارة العضوات</a>
-        <a href="/malath-php-app/dashboard.php?tab=posts"    class="admin-nav-link <?= $tab==='posts'?'active':'' ?>"><i class="fa-solid fa-comments"></i> إدارة المنشورات</a>
-        <a href="/malath-php-app/dashboard.php?tab=articles" class="admin-nav-link <?= $tab==='articles'?'active':'' ?>" style="position:relative;">
+        <a href="/malath-php-app/dashboard?tab=overview" class="admin-nav-link <?= $tab==='overview'?'active':'' ?>"><i class="fa-solid fa-house"></i> الإحصائيات</a>
+        <a href="/malath-php-app/dashboard?tab=users"    class="admin-nav-link <?= $tab==='users'?'active':'' ?>"><i class="fa-solid fa-users"></i> إدارة العضوات</a>
+        <a href="/malath-php-app/dashboard?tab=posts"    class="admin-nav-link <?= $tab==='posts'?'active':'' ?>"><i class="fa-solid fa-comments"></i> إدارة المنشورات</a>
+        <a href="/malath-php-app/dashboard?tab=articles" class="admin-nav-link <?= $tab==='articles'?'active':'' ?>" style="position:relative;">
             <i class="fa-solid fa-newspaper"></i> مقالات معلّقة
             <?php if($pending_count > 0): ?>
             <span style="background:#e03052;color:#fff;font-size:.7rem;font-weight:800;padding:.15rem .55rem;border-radius:2rem;margin-right:.4rem;"><?= $pending_count ?></span>
             <?php endif; ?>
         </a>
-        <a href="/malath-php-app/index.php" class="admin-nav-link"><i class="fa-solid fa-globe"></i> الموقع الرئيسي</a>
+        <a href="/malath-php-app/index" class="admin-nav-link"><i class="fa-solid fa-globe"></i> الموقع الرئيسي</a>
     </nav>
     <div class="sidebar-footer">
-        <a href="/malath-php-app/logout.php" class="admin-nav-link" style="color:var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج</a>
+        <a href="/malath-php-app/logout" class="admin-nav-link" style="color:var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج</a>
     </div>
 </aside>
 
 <main class="admin-main">
     <header class="admin-header">
-        <h2 class="font-headline font-bold text-primary-dark" style="font-size:1.3rem;margin:0;">
-            <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات','articles'=>'مقالات معلّقة'][$tab] ?? 'لوحة التحكم' ?>
-        </h2>
+        <div style="display:flex;align-items:center;">
+            <button class="admin-menu-toggle" id="adminMenuToggle"><i class="fa-solid fa-bars"></i></button>
+            <h2 class="font-headline font-bold text-primary-dark" style="font-size:1.3rem;margin:0;">
+                <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات','articles'=>'مقالات معلّقة'][$tab] ?? 'لوحة التحكم' ?>
+            </h2>
+        </div>
         <div style="display:flex;align-items:center;gap:1rem;">
-            <span style="font-size:.9rem;color:var(--secondary);">مرحباً،</span>
+            <span style="font-size:.9rem;color:var(--secondary);" class="hidden-mobile">مرحباً،</span>
             <strong class="font-headline text-primary"><?= htmlspecialchars($_SESSION['user_name']) ?></strong>
         </div>
     </header>
@@ -130,42 +157,46 @@
         <div class="data-card">
             <div class="data-card-header">
                 <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">آخر المنشورات</h3>
-                <a href="/malath-php-app/dashboard.php?tab=posts" class="btn-sm btn-info">عرض الكل</a>
+                <a href="/malath-php-app/dashboard?tab=posts" class="btn-sm btn-info">عرض الكل</a>
             </div>
-            <table class="data-table">
-                <thead><tr><th>المستخدمة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>التاريخ</th></tr></thead>
-                <tbody>
-                <?php foreach($recent_posts as $r): ?>
-                <tr>
-                    <td><strong><?= htmlspecialchars($r['user_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($r['community_name']) ?></td>
-                    <td><span class="badge-type badge-<?= $r['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$r['type']] ?? $r['type'] ?></span></td>
-                    <td class="post-preview"><?= htmlspecialchars(mb_substr($r['content'],0,60)) ?>…</td>
-                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($r['created_at'])) ?></td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr><th>المستخدمة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>التاريخ</th></tr></thead>
+                    <tbody>
+                    <?php foreach($recent_posts as $r): ?>
+                    <tr>
+                        <td><strong><?= htmlspecialchars($r['user_name']) ?></strong></td>
+                        <td><?= htmlspecialchars($r['community_name']) ?></td>
+                        <td><span class="badge-type badge-<?= $r['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$r['type']] ?? $r['type'] ?></span></td>
+                        <td class="post-preview"><?= htmlspecialchars(mb_substr($r['content'],0,60)) ?>…</td>
+                        <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($r['created_at'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="data-card">
             <div class="data-card-header">
                 <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">آخر التسجيلات</h3>
-                <a href="/malath-php-app/dashboard.php?tab=users" class="btn-sm btn-info">إدارة الكل</a>
+                <a href="/malath-php-app/dashboard?tab=users" class="btn-sm btn-info">إدارة الكل</a>
             </div>
-            <table class="data-table">
-                <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th></tr></thead>
-                <tbody>
-                <?php foreach($recent_users as $u): ?>
-                <tr>
-                    <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
-                    <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
-                    <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
-                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th></tr></thead>
+                    <tbody>
+                    <?php foreach($recent_users as $u): ?>
+                    <tr>
+                        <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
+                        <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
+                        <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
+                        <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <?php elseif($tab === 'users'): ?>
@@ -178,39 +209,41 @@
                 <input type="text" name="search" placeholder="ابحثي باسم أو بريد..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                 <button type="submit" class="btn-sm btn-info" style="padding:.6rem 1.4rem;">بحث</button>
             </form>
-            <table class="data-table">
-                <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
-                <tbody>
-                <?php foreach($users as $u): ?>
-                <tr>
-                    <td style="color:var(--secondary);"><?= $u['id'] ?></td>
-                    <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
-                    <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
-                    <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
-                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
-                    <td>
-                        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                            <?php if($u['id'] != $_SESSION['user_id']): ?>
-                            <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;">
-                                <?php csrf_field(); ?>
-                                <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
-                                <input type="hidden" name="new_role" value="<?= $u['role']==='admin'?'user':'admin' ?>">
-                                <button type="submit" name="toggle_role" class="btn-sm btn-info"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
-                            </form>
-                            <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;" onsubmit="return confirm('حذف هذه العضو نهائياً؟');">
-                                <?php csrf_field(); ?>
-                                <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
-                                <button type="submit" name="delete_user" class="btn-sm btn-danger">حذف</button>
-                            </form>
-                            <?php else: ?>
-                            <span style="font-size:.8rem;color:var(--secondary);">أنتِ</span>
-                            <?php endif; ?>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
+                    <tbody>
+                    <?php foreach($users as $u): ?>
+                    <tr>
+                        <td style="color:var(--secondary);"><?= $u['id'] ?></td>
+                        <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
+                        <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
+                        <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
+                        <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
+                        <td>
+                            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                <?php if($u['id'] != $_SESSION['user_id']): ?>
+                                <form method="POST" action="/malath-php-app/dashboard" style="display:inline;">
+                                    <?php csrf_field(); ?>
+                                    <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
+                                    <input type="hidden" name="new_role" value="<?= $u['role']==='admin'?'user':'admin' ?>">
+                                    <button type="submit" name="toggle_role" class="btn-sm btn-info"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
+                                </form>
+                                <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذه العضو نهائياً؟');">
+                                    <?php csrf_field(); ?>
+                                    <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
+                                    <button type="submit" name="delete_user" class="btn-sm btn-danger">حذف</button>
+                                </form>
+                                <?php else: ?>
+                                <span style="font-size:.8rem;color:var(--secondary);">أنتِ</span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <?php elseif($tab === 'articles'): ?>
@@ -242,14 +275,14 @@
                         </div>
                     </div>
                     <div style="display:flex;gap:.75rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--outline-variant);">
-                        <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;">
+                        <form method="POST" action="/malath-php-app/dashboard" style="display:inline;">
                             <?php csrf_field(); ?>
                             <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
                             <button type="submit" name="approve_article" class="btn-sm" style="background:#dcfce7;color:#166534;padding:.5rem 1.6rem;font-size:.88rem;">
                                 ✅ موافقة — نشر الآن
                             </button>
                         </form>
-                        <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;"
+                        <form method="POST" action="/malath-php-app/dashboard" style="display:inline;"
                               onsubmit="return confirm('رفض هذه المقالة نهائياً؟');">
                             <?php csrf_field(); ?>
                             <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
@@ -269,34 +302,49 @@
             <div class="data-card-header">
                 <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">المنشورات (<?= $total_posts ?>)</h3>
             </div>
-            <table class="data-table">
-                <thead><tr><th>الكاتبة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>❤ إعجاب</th><th>💬 تعليق</th><th>التاريخ</th><th>حذف</th></tr></thead>
-                <tbody>
-                <?php foreach($posts as $p): ?>
-                <tr>
-                    <td><strong><?= htmlspecialchars($p['user_name']) ?></strong></td>
-                    <td><?= htmlspecialchars($p['community_name']) ?></td>
-                    <td><span class="badge-type badge-<?= $p['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$p['type']] ?? $p['type'] ?></span></td>
-                    <td class="post-preview"><?php if($p['title']): ?><strong><?= htmlspecialchars(mb_substr($p['title'],0,30)) ?> — </strong><?php endif; ?><?= htmlspecialchars(mb_substr($p['content'],0,50)) ?>…</td>
-                    <td style="text-align:center;"><?= $p['likes'] ?></td>
-                    <td style="text-align:center;"><?= $p['comments'] ?></td>
-                    <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($p['created_at'])) ?></td>
-                    <td>
-                        <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');">
-                            <?php csrf_field(); ?>
-                            <input type="hidden" name="post_id" value="<?= $p['id'] ?>">
-                            <button type="submit" name="delete_post" class="btn-sm btn-danger">حذف</button>
-                        </form>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead><tr><th>الكاتبة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>❤ إعجاب</th><th>💬 تعليق</th><th>التاريخ</th><th>حذف</th></tr></thead>
+                    <tbody>
+                    <?php foreach($posts as $p): ?>
+                    <tr>
+                        <td><strong><?= htmlspecialchars($p['user_name']) ?></strong></td>
+                        <td><?= htmlspecialchars($p['community_name']) ?></td>
+                        <td><span class="badge-type badge-<?= $p['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$p['type']] ?? $p['type'] ?></span></td>
+                        <td class="post-preview"><?php if($p['title']): ?><strong><?= htmlspecialchars(mb_substr($p['title'],0,30)) ?> — </strong><?php endif; ?><?= htmlspecialchars(mb_substr($p['content'],0,50)) ?>…</td>
+                        <td style="text-align:center;"><?= $p['likes'] ?></td>
+                        <td style="text-align:center;"><?= $p['comments'] ?></td>
+                        <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($p['created_at'])) ?></td>
+                        <td>
+                            <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');">
+                                <?php csrf_field(); ?>
+                                <input type="hidden" name="post_id" value="<?= $p['id'] ?>">
+                                <button type="submit" name="delete_post" class="btn-sm btn-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php endif; ?>
     </div>
 </main>
 
 <script src="/malath-php-app/assets/js/app.js"></script>
+<script>
+    const adminMenuToggle = document.getElementById('adminMenuToggle');
+    const adminSidebar = document.querySelector('.admin-sidebar');
+    const adminOverlay = document.getElementById('adminOverlay');
+
+    function toggleAdminSidebar() {
+        adminSidebar.classList.toggle('active');
+        adminOverlay.classList.toggle('active');
+    }
+
+    if (adminMenuToggle) adminMenuToggle.addEventListener('click', toggleAdminSidebar);
+    if (adminOverlay) adminOverlay.addEventListener('click', toggleAdminSidebar);
+</script>
 </body>
 </html>

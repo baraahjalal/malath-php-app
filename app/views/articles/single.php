@@ -174,7 +174,7 @@
 
     <!-- شريط الأكشن -->
     <div class="article-actions-bar">
-        <a href="/malath-php-app/articles.php" class="btn-outline" style="text-decoration:none;">
+        <a href="/malath-php-app/articles" class="btn-outline" style="text-decoration:none;">
             ← جميع المقالات
         </a>
         <button id="save-btn"

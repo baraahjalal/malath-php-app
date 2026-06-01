@@ -1,6 +1,6 @@
 <?php include ROOT_PATH . '/includes/header.php'; ?>
 <?php if (!empty($auto_redirect)): ?>
-<script>setTimeout(function(){ window.location.href="/malath-php-app/login.php"; }, 3000);</script>
+<script>setTimeout(function(){ window.location.href="/malath-php-app/login"; }, 3000);</script>
 <?php endif; ?>
 
 <style>
@@ -174,7 +174,7 @@
                     <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
                 <?php endif; ?>
 
-                <form action="/malath-php-app/register.php" method="POST">
+                <form action="/malath-php-app/register" method="POST">
                     <?php csrf_field(); ?>
                     <div class="form-row">
                         <div class="input-group">
@@ -234,7 +234,7 @@
 
                 <div style="text-align: center;">
                     <p style="color: var(--secondary); margin-bottom: 1rem;">أتمتلكين حساباً مسبقاً؟</p>
-                    <a href="/malath-php-app/login.php" class="btn-outline" style="display: block; text-decoration: none; text-align: center;">
+                    <a href="/malath-php-app/login" class="btn-outline" style="display: block; text-decoration: none; text-align: center;">
                         تسجيل الدخول
                     </a>
                 </div>

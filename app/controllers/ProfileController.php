@@ -35,7 +35,7 @@ class ProfileController extends Controller {
         } elseif (isset($_POST['edit_post_id']) && isset($_POST['edit_content'])) {
             $postModel->updateContent((int)$_POST['edit_post_id'], $user_id, trim($_POST['edit_content']));
         }
-        $this->redirect('/malath-php-app/profile.php');
+        $this->redirect('/malath-php-app/profile');
     }
 
     public function handleUpdate(): void {
@@ -71,10 +71,10 @@ class ProfileController extends Controller {
 
         try {
             $model->update($user_id, $fields);
-            $this->redirect('/malath-php-app/profile.php?status=updated');
-        } catch (\PDOException $e) {
-            error_log("Profile update: " . $e->getMessage());
-            $this->redirect('/malath-php-app/profile.php?status=error');
+            $this->redirect('/malath-php-app/profile?status=updated');
+        } catch (\Exception $e) {
+            error_log("Update Profile Error: " . $e->getMessage());
+            $this->redirect('/malath-php-app/profile?status=error');
         }
     }
 }

@@ -178,6 +178,21 @@
     color: #fff;
     border-color: transparent;
 }
+
+/* Mobile Responsiveness for Articles */
+@media (max-width: 768px) {
+    .articles-hero-title { font-size: 2rem; }
+    .articles-filter-tabs { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        justify-content: flex-start; 
+        padding-bottom: 0.5rem; 
+        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory;
+    }
+    .articles-tab { white-space: nowrap; scroll-snap-align: start; }
+    .articles-body { padding: 2rem 0; }
+}
 </style>
 
 <!-- Hero -->
@@ -185,7 +200,7 @@
     <div class="container">
         <h1 class="articles-hero-title">مقالات ملاذ</h1>
         <p class="articles-hero-sub">محتوى محكّم ومراجَع، يُنشر بعد موافقة الإدارة — تجارب حقيقية وأفكار صادقة من نساء مجتمعنا.</p>
-        <a href="/malath-php-app/article-create.php"
+        <a href="/malath-php-app/article-create"
            class="btn-primary"
            style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;margin-bottom:1.5rem;padding:0.75rem 1.8rem;border-radius:3rem;font-size:0.95rem;">
             ✍ اقترحي مقالة
@@ -195,10 +210,10 @@
         </div>
         <!-- فلاتر التصنيف -->
         <div class="articles-filter-tabs">
-            <a href="/malath-php-app/articles.php"
+            <a href="/malath-php-app/articles"
                class="articles-tab <?= $currentSlug === null ? 'active' : '' ?>">الكل</a>
             <?php foreach ($communities as $c): ?>
-            <a href="/malath-php-app/articles.php?c=<?= htmlspecialchars($c['slug']) ?>"
+            <a href="/malath-php-app/articles?c=<?= htmlspecialchars($c['slug']) ?>"
                class="articles-tab <?= $currentSlug === $c['slug'] ? 'active' : '' ?>">
                 <?= htmlspecialchars($c['name']) ?>
             </a>
@@ -213,7 +228,7 @@
         <?php if ($articles): ?>
         <div class="articles-grid">
             <?php foreach ($articles as $a): ?>
-            <a href="/malath-php-app/articles-single.php?id=<?= $a['id'] ?>" class="article-card animate-fade-in-up">
+            <a href="/malath-php-app/articles-single?id=<?= $a['id'] ?>" class="article-card animate-fade-in-up">
                 <?php if (!empty($a['image'])): ?>
                     <img src="<?= htmlspecialchars($a['image']) ?>" alt="" class="article-card-thumb">
                 <?php else: ?>
@@ -250,7 +265,7 @@
             $qs = $currentSlug ? '&c=' . urlencode($currentSlug) : '';
             for ($i = 1; $i <= $totalPages; $i++):
             ?>
-            <a href="/malath-php-app/articles.php?page=<?= $i . $qs ?>"
+            <a href="/malath-php-app/articles?page=<?= $i . $qs ?>"
                class="page-btn <?= $i === $page ? 'active' : '' ?>"><?= $i ?></a>
             <?php endfor; ?>
         </div>

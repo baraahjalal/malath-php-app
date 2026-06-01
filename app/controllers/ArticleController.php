@@ -28,7 +28,7 @@ class ArticleController extends Controller {
 
     public function create(): void {
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /malath-php-app/login.php');
+            header('Location: /malath-php-app/login');
             exit;
         }
         $communities = (new CommunityModel())->getAll();

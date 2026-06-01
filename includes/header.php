@@ -2,7 +2,9 @@
   if (session_status() === PHP_SESSION_NONE) session_start();
   require_once 'includes/csrf.php';
   csrf_generate();
-  $current_page = basename($_SERVER['PHP_SELF']);
+  $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+  $current_page = trim(str_replace('/malath-php-app', '', $uri), '/');
+  if ($current_page === '') $current_page = 'index';
 
   // --- الجزء الجديد المضاف ---
   $user_avatar = 'assets/images/default-avatar.png'; // الصورة الافتراضية
@@ -33,15 +35,20 @@
 
 <nav class="glass-nav">
     <div class="container flex justify-between items-center">
-        <!-- Logo -->
-        <a href="index.php" class="text-primary font-black font-headline" style="font-size: 1.875rem; text-decoration: none; letter-spacing: -0.025em;">ملاذ</a>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn hidden-desktop" id="mobileMenuBtn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <!-- Logo -->
+            <a href="/malath-php-app/index" class="text-primary font-black font-headline" style="font-size: 1.875rem; text-decoration: none; letter-spacing: -0.025em;">ملاذ</a>
+        </div>
 
-        <!-- Desktop Links -->
         <div class="hidden-mobile flex items-center gap-10 font-headline">
-            <a href="index.php" class="nav-link <?php echo ($current_page == 'index.php' || $current_page == '') ? 'active' : ''; ?>">الرئيسية</a>
-            <a href="community.php" class="nav-link <?php echo ($current_page == 'community.php') ? 'active' : ''; ?>">المجتمع</a>
-            <a href="articles.php" class="nav-link <?php echo in_array($current_page, ['articles.php','article.php','articles-single.php']) ? 'active' : ''; ?>">المقالات</a>
-            <a href="about.php" class="nav-link <?php echo ($current_page == 'about.php') ? 'active' : ''; ?>">من نحن</a>
+            <a href="/malath-php-app/index" class="nav-link <?php echo ($current_page == 'index' || $current_page == '') ? 'active' : ''; ?>">الرئيسية</a>
+            <a href="/malath-php-app/community" class="nav-link <?php echo ($current_page == 'community') ? 'active' : ''; ?>">المجتمع</a>
+            <a href="/malath-php-app/articles" class="nav-link <?php echo in_array($current_page, ['articles','article-create','articles-single']) ? 'active' : ''; ?>">المقالات</a>
+            <a href="/malath-php-app/about" class="nav-link <?php echo ($current_page == 'about') ? 'active' : ''; ?>">من نحن</a>
         </div>
 
         <!-- User Actions -->
@@ -61,7 +68,7 @@
                 <div class="notification-list" id="notif-list">
                     <div style="text-align:center;padding:1.5rem;color:var(--secondary);font-size:.9rem;">جاري التحميل...</div>
                 </div>
-                <a href="community.php" class="notification-footer">الذهاب للمجتمع</a>
+                <a href="/malath-php-app/community" class="notification-footer">الذهاب للمجتمع</a>
             </div>
         </div>
         <script>
@@ -121,31 +128,46 @@
         })();
         </script>
 
-        <a href="profile.php" class="profile-avatar" title="ملفي الشخصي">
+        <a href="/malath-php-app/profile" class="profile-avatar" title="ملفي الشخصي">
             <img src="<?= htmlspecialchars($user_avatar); ?>" alt="Profile">
         </a>
         
         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-            <a href="dashboard.php" title="لوحة التحكم" class="btn-logout-icon" style="background-color: var(--primary-container); color: var(--primary-dark);">
+            <a href="/malath-php-app/dashboard" title="لوحة التحكم" class="btn-logout-icon" style="background-color: var(--primary-container); color: var(--primary-dark);">
                 <i class="fa-solid fa-chart-line"></i>
             </a>
         <?php endif; ?>
         
         <!-- زر خروج -->
-        <a href="logout.php" title="تسجيل الخروج" class="btn-logout-icon">
+        <a href="/malath-php-app/logout" title="تسجيل الخروج" class="btn-logout-icon">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </a>
 
     <?php else: ?>
         <!-- هذا الجزء يظهر للزوار فقط -->
         <div class="auth-buttons-container">
-            <a href="login.php?redirect=community.php" class="btn-login-outline">تسجيل الدخول</a>
-            <a href="register.php" class="btn-join-header">إنضمي إلينا</a>
+            <a href="/malath-php-app/login?redirect=community.php" class="btn-login-outline">تسجيل الدخول</a>
+            <a href="/malath-php-app/register" class="btn-join-header">إنضمي إلينا</a>
         </div>
     <?php endif; ?>
 </div>
     </div>
 </nav>
+
+<!-- Mobile Drawer -->
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <div class="mobile-drawer-header">
+        <a href="/malath-php-app/index" class="text-primary font-black font-headline" style="font-size: 1.875rem; text-decoration: none;">ملاذ</a>
+        <button class="close-drawer-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="mobile-drawer-links font-headline">
+        <a href="/malath-php-app/index" class="mobile-nav-link <?php echo ($current_page == 'index' || $current_page == '') ? 'active' : ''; ?>"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        <a href="/malath-php-app/community" class="mobile-nav-link <?php echo ($current_page == 'community') ? 'active' : ''; ?>"><i class="fa-solid fa-users"></i> المجتمع</a>
+        <a href="/malath-php-app/articles" class="mobile-nav-link <?php echo in_array($current_page, ['articles','article-create','articles-single']) ? 'active' : ''; ?>"><i class="fa-solid fa-newspaper"></i> المقالات</a>
+        <a href="/malath-php-app/about" class="mobile-nav-link <?php echo ($current_page == 'about') ? 'active' : ''; ?>"><i class="fa-solid fa-circle-info"></i> من نحن</a>
+    </div>
+</div>
 
 <style>
 /* Header Auth Buttons */
@@ -214,9 +236,136 @@
     background-color: #fee2e2;
     color: #ef4444;
 }
-/* Temporary inline styles for media queries missing in main css */
+
+/* Mobile Drawer Styles */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: all 0.2s;
+}
+
+.mobile-menu-btn:active { transform: scale(0.9); }
+
+.mobile-drawer-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-drawer-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-drawer {
+    position: fixed;
+    top: 0; right: -300px; /* Start hidden */
+    width: 280px;
+    height: 100vh;
+    background: var(--surface);
+    z-index: 100;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-drawer.active {
+    right: 0;
+}
+
+.mobile-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.close-drawer-btn {
+    background: var(--surface-container);
+    border: none;
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    color: var(--secondary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+
+.mobile-drawer-links {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.mobile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    text-decoration: none;
+    color: var(--on-surface);
+    font-weight: 700;
+    border-radius: 1rem;
+    transition: all 0.2s;
+    font-size: 1.05rem;
+}
+
+.mobile-nav-link i { width: 24px; text-align: center; color: var(--secondary); }
+
+.mobile-nav-link.active {
+    background: var(--primary-gradient);
+    color: white;
+}
+.mobile-nav-link.active i { color: white; }
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .hidden-mobile { display: none !important; }
+  .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+  .hidden-desktop { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .hidden-desktop { display: none !important; }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const mobileOverlay = document.getElementById('mobileDrawerOverlay');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+
+    function openDrawer() {
+        mobileDrawer.classList.add('active');
+        mobileOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+
+    function closeDrawer() {
+        mobileDrawer.classList.remove('active');
+        mobileOverlay.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    if (mobileBtn && mobileDrawer) {
+        mobileBtn.addEventListener('click', openDrawer);
+        closeDrawerBtn.addEventListener('click', closeDrawer);
+        mobileOverlay.addEventListener('click', closeDrawer);
+    }
+});
+</script>
 <main>

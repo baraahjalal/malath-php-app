@@ -51,8 +51,8 @@
                 نحن نؤمن بأن كل امرأة تستحق مساحة هادئة تكتشف فيها قوتها، وتنمي فيها ذاتها، وتجد الدعم الذي تحتاجه في رحلتها نحو التألق والتميز في بيئة خالية من الأحكام.
             </p>
             <div class="flex gap-4 animate-fade-in-up delay-300" style="flex-wrap:wrap; margin-top:2rem;">
-                <a href="/malath-php-app/community.php" class="btn-primary" style="text-decoration:none; padding:12px 30px; font-size:1.1rem;">ابدئي رحلتكِ الآن</a>
-                <a href="/malath-php-app/about.php" class="btn-outline" style="text-decoration:none; padding:12px 30px; font-size:1.1rem;">اكتشفي برامجنا</a>
+                <a href="/malath-php-app/community" class="btn-primary" style="text-decoration:none; padding:12px 30px; font-size:1.1rem;">ابدئي رحلتكِ الآن</a>
+                <a href="/malath-php-app/about" class="btn-outline" style="text-decoration:none; padding:12px 30px; font-size:1.1rem;">اكتشفي برامجنا</a>
             </div>
         </div>
         <div class="hidden-mobile animate-fade-in-up delay-200">
@@ -74,25 +74,25 @@
                 <div class="pillar-icon-wrapper"><i class="fa-solid fa-seedling"></i></div>
                 <h3 class="pillar-title">صحتكِ أولاً</h3>
                 <p class="pillar-desc">برامج متكاملة للعناية بصحتكِ الجسدية، تغذيتكِ، وأسلوب حياتكِ الصحي بحب واهتمام.</p>
-                <a href="/malath-php-app/community.php?id=health" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
+                <a href="/malath-php-app/community?id=health" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
             </div>
             <div class="pillar-card animate-fade-in-up delay-200">
                 <div class="pillar-icon-wrapper"><i class="fa-solid fa-heart-pulse"></i></div>
                 <h3 class="pillar-title">سكينتكِ النفسية</h3>
                 <p class="pillar-desc">جلسات استشارية ومجتمعات آمنة للتعبير عن الذات وتجاوز التحديات النفسية بكل طمأنينة وسرية.</p>
-                <a href="/malath-php-app/community.php?id=psychology" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
+                <a href="/malath-php-app/community?id=psychology" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
             </div>
             <div class="pillar-card animate-fade-in-up delay-300">
                 <div class="pillar-icon-wrapper"><i class="fa-solid fa-book-open"></i></div>
                 <h3 class="pillar-title">نوركِ الروحي</h3>
                 <p class="pillar-desc">محتوى ديني وسطي يعزز من قيمكِ الروحية ويوفر لكِ الفهم العميق لمكانتكِ السامية المجيدة.</p>
-                <a href="/malath-php-app/community.php?id=religion" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
+                <a href="/malath-php-app/community?id=religion" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
             </div>
             <div class="pillar-card animate-fade-in-up delay-400">
                 <div class="pillar-icon-wrapper"><i class="fa-solid fa-star"></i></div>
                 <h3 class="pillar-title">طموحكِ بلا حدود</h3>
                 <p class="pillar-desc">تمكين أكاديمي ومهني يساعدكِ في تحقيق أهدافكِ الدراسية وتطوير شغفكِ وإمكانياتك.</p>
-                <a href="/malath-php-app/community.php?id=academic" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
+                <a href="/malath-php-app/community?id=academic" class="pillar-link">اكتشفي المزيد <i class="fa-solid fa-arrow-left"></i></a>
             </div>
         </div>
     </div>

@@ -146,6 +146,30 @@
 .btn-join:hover { background-color: var(--primary,#db2777); color: white; box-shadow: 0 4px 12px rgba(219,39,119,0.2); transform: translateY(-1px); }
 .btn-leave { background-color: var(--surface-container,#f3f4f6); color: var(--secondary,#4b5563); border: 1px solid var(--outline-variant,#e5e7eb); padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
 .btn-leave:hover { background-color: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+
+/* Mobile Responsiveness for Community */
+@media (max-width: 768px) {
+    .community-title { font-size: 1.75rem; }
+    .community-tabs-container { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        justify-content: flex-start; 
+        padding-bottom: 0.5rem; 
+        -webkit-overflow-scrolling: touch; 
+        scroll-snap-type: x mandatory;
+    }
+    .community-tab { white-space: nowrap; scroll-snap-align: start; }
+    .community-layout { padding: 1.5rem 1rem; gap: 2rem; }
+    
+    .create-post-top { gap: 0.75rem; }
+    .create-post-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+    .create-post-select, .create-post-text, .create-post-btn { width: 100%; margin: 0; text-align: center; }
+    
+    .feed-card { padding: 1.25rem 1rem; margin-bottom: 1.5rem; }
+    .post-interaction-bar { flex-direction: column; gap: 1rem; align-items: stretch !important; }
+    .post-interaction-bar > div { display: flex; justify-content: space-between; gap: 0.5rem; }
+    .post-interaction-bar button { flex: 1; justify-content: center; padding: 0.6rem; border-radius: 1rem; background: var(--surface-container-high); }
+}
 </style>
 
 <div class="community-header">
@@ -153,9 +177,9 @@
     <h1 class="community-title">مجتمعات ملاذ</h1>
     <p>مساحتك الآمنة للتفاعل، التعلم، ومشاركة تجاربك في بيئة نسائية داعمة ومحفزة.</p>
     <div class="community-tabs-container">
-      <a href="/malath-php-app/community.php?c=all" class="community-tab<?= $current_slug === 'all' ? ' active' : '' ?>">الأحدث</a>
+      <a href="/malath-php-app/community?c=all" class="community-tab<?= $current_slug === 'all' ? ' active' : '' ?>">الأحدث</a>
       <?php foreach($communities as $c): ?>
-        <a href="/malath-php-app/community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-tab<?= $current_slug === $c['slug'] ? ' active' : '' ?>">
+        <a href="/malath-php-app/community?c=<?=htmlspecialchars($c['slug'])?>" class="community-tab<?= $current_slug === $c['slug'] ? ' active' : '' ?>">
           <?=htmlspecialchars($c['name'])?>
         </a>
       <?php endforeach; ?>
@@ -169,11 +193,11 @@
       <h3 class="widget-title">كل المجتمعات</h3>
       <?php foreach($communities as $c): ?>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-          <a href="/malath-php-app/community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item" style="flex:1;">
+          <a href="/malath-php-app/community?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item" style="flex:1;">
             <?=htmlspecialchars($c['name'])?>
           </a>
           <?php if($user_id): ?>
-            <form method="post" action="/malath-php-app/community.php?c=<?=htmlspecialchars($current_slug)?>" style="display:inline;">
+            <form method="post" action="/malath-php-app/community?c=<?=htmlspecialchars($current_slug)?>" style="display:inline;">
               <?php csrf_field(); ?>
               <input type="hidden" name="community_id" value="<?=$c['id']?>">
               <?php if (!in_array($c['id'], $user_communities)): ?>
@@ -192,13 +216,13 @@
       <?php if($user_id && $user_communities): ?>
         <?php foreach($communities as $c):
           if(!in_array($c['id'], $user_communities)) continue; ?>
-          <a href="/malath-php-app/community.php?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item">
+          <a href="/malath-php-app/community?c=<?=htmlspecialchars($c['slug'])?>" class="community-list-item">
             <?=htmlspecialchars($c['name'])?>
           </a>
         <?php endforeach; ?>
       <?php elseif(!$user_id): ?>
         <p style="font-size:0.95rem; color:#a78;">سجلي دخولك لتخصيص تجربتك والانضمام للمجتمعات.</p>
-        <a href="/malath-php-app/login.php?redirect=community.php" class="btn-outline">تسجيل الدخول</a>
+        <a href="/malath-php-app/login?redirect=community.php" class="btn-outline">تسجيل الدخول</a>
       <?php else: ?>
         <div>لم تنضمي لأي مجتمع بعد.</div>
       <?php endif; ?>
@@ -221,7 +245,7 @@
         <?php if($post_message): ?>
           <div class="post-success-msg"><i class="fa-solid fa-circle-check"></i> <?=htmlspecialchars($post_message)?></div>
         <?php endif; ?>
-        <form method="post" action="/malath-php-app/community.php?c=<?=htmlspecialchars($current_slug)?>">
+        <form method="post" action="/malath-php-app/community?c=<?=htmlspecialchars($current_slug)?>">
           <?php csrf_field(); ?>
           <div class="create-post-top">
             <img src="<?=htmlspecialchars($user_avatar ?: 'assets/images/default-avatar.png')?>" alt="Profile" class="user-avatar" style="width:3rem;height:3rem;">
@@ -252,8 +276,8 @@
     <?php else: ?>
       <div class="create-post-box" style="text-align:center;">
         <p>لتتمكني من النشر، قومي بتسجيل الدخول أو إنشاء حساب جديد.</p>
-        <a href="/malath-php-app/login.php?redirect=community.php" class="btn-primary">تسجيل الدخول</a>
-        <a href="/malath-php-app/register.php" class="btn-outline">إنشاء حساب جديد</a>
+        <a href="/malath-php-app/login?redirect=community.php" class="btn-primary">تسجيل الدخول</a>
+        <a href="/malath-php-app/register" class="btn-outline">إنشاء حساب جديد</a>
       </div>
     <?php endif; ?>
 
@@ -289,7 +313,7 @@
                         class="interaction-btn <?= $post['is_liked'] ? 'active-like' : '' ?>"
                         id="like-btn-<?=$post['id']?>"
                         data-post="<?=$post['id']?>"
-                        onclick="<?= $user_id ? 'ajaxLike(this)' : "location.href='/malath-php-app/login.php'" ?>">
+                        onclick="<?= $user_id ? 'ajaxLike(this)' : "location.href='/malath-php-app/login'" ?>">
                         <i class="<?= $post['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
                         <span id="like-count-<?=$post['id']?>"><?= $post['likes_count'] ?> إعجاب</span>
                     </button>
@@ -302,7 +326,7 @@
                     class="interaction-btn <?= $post['is_saved'] ? 'active-save' : '' ?>"
                     id="save-btn-<?=$post['id']?>"
                     data-post="<?=$post['id']?>"
-                    onclick="<?= $user_id ? 'ajaxSave(this)' : "location.href='/malath-php-app/login.php'" ?>">
+                    onclick="<?= $user_id ? 'ajaxSave(this)' : "location.href='/malath-php-app/login'" ?>">
                     <i class="<?= $post['is_saved'] ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
                     <span id="save-label-<?=$post['id']?>"><?= $post['is_saved'] ? 'مُحفوظ' : 'حفظ' ?></span>
                 </button>
