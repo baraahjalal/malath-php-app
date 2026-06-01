@@ -13,7 +13,7 @@ class CommunityController extends Controller {
 
         $commModel  = new CommunityModel();
         $postModel  = new PostModel();
-        $communities     = $commModel->getAll();
+        $communities      = $commModel->getAll();
         $user_communities = $user_id ? $commModel->getUserCommunities($user_id) : [];
 
         $current_community = null;
@@ -29,10 +29,17 @@ class CommunityController extends Controller {
         }
         unset($post);
 
+        $user_avatar  = '';
+        if ($user_id) {
+            $st = $this->db->prepare("SELECT avatar FROM users WHERE id = ?");
+            $st->execute([$user_id]);
+            $user_avatar = $st->fetchColumn() ?: '';
+        }
+
         $post_message = '';
         $this->view('community.index', compact(
             'user_id','current_slug','communities','user_communities',
-            'current_community','posts','post_message'
+            'current_community','posts','post_message','user_avatar'
         ));
     }
 

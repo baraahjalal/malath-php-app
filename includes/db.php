@@ -1,9 +1,9 @@
 <?php
-$host = 'localhost';
-$db   = 'malath'; // اسم الداتا بيز
-$user = 'root'; // غيّر هذا باسم المستخدم الصحيح
-$pass = ''; // غيّر هذا بكلمة السر الصحيحة
-$charset = 'utf8mb4';
+$host     = 'localhost';
+$db       = 'malath';
+$db_user  = 'root';
+$pass     = '';
+$charset  = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
@@ -12,7 +12,7 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 try {
-     $pdo = new PDO($dsn, $user, $pass, $options);
+     $pdo = new PDO($dsn, $db_user, $pass, $options);
 } catch (\PDOException $e) {
      die("خطأ في الاتصال: " . $e->getMessage());
 }

@@ -1,28 +1,22 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-if (session_status() === PHP_SESSION_NONE) session_start();
-require_once '../includes/db.php';
-require_once '../includes/csrf.php';
+require_once __DIR__ . '/../app/bootstrap.php';
+use App\Core\Database;
+$pdo = Database::getInstance()->getPdo();
 
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'error' => 'login_required']);
-    exit;
+    echo json_encode(['success' => false, 'error' => 'login_required']); exit;
 }
 
 $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? '');
 if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'csrf']);
-    exit;
+    echo json_encode(['success' => false, 'error' => 'csrf']); exit;
 }
 
 $post_id = intval($_POST['post_id'] ?? 0);
 $user_id = $_SESSION['user_id'];
-
-if (!$post_id) {
-    echo json_encode(['success' => false]);
-    exit;
-}
+if (!$post_id) { echo json_encode(['success' => false]); exit; }
 
 $chk = $pdo->prepare("SELECT id FROM post_saves WHERE post_id=? AND user_id=?");
 $chk->execute([$post_id, $user_id]);

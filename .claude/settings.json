@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(grep -n 'prepare\\\\|SELECT\\\\|INSERT\\\\|UPDATE\\\\|DELETE\\\\|$pdo' login.php register.php logout.php community.php profile.php update_profile.php dashboard.php index.php about.php contact.php faq.php privacy.php terms.php)",
+      "Bash(grep -rn 'prepare\\\\|SELECT\\\\|INSERT\\\\|UPDATE\\\\|DELETE\\\\|$pdo' /Applications/XAMPP/xamppfiles/htdocs/malath-php-app/app/views/)",
+      "Read(//Applications/XAMPP/xamppfiles/logs/**)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root -e ' *)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root --password=\"\" -e \"SHOW CREATE TABLE malath.notifications\\\\G\")",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root --password=\"\" -e \"SELECT TABLE_NAME, TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA='malath';\")",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root -e \"SELECT COUNT\\(*\\) FROM malath.notifications;\")",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root malath -e ' *)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql -u root -e \"SHOW COLUMNS FROM malath.notifications;\")",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/php -r ' *)"
+    ]
+  }
+}

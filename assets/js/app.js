@@ -2,30 +2,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Malath PHP App Loaded Successfully');
     
-    // Notification Toggle
-    const notifBtn = document.getElementById('notification-btn');
-    const notifDropdown = document.getElementById('notification-dropdown');
-
-    if (notifBtn && notifDropdown) {
-        notifBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            notifDropdown.classList.toggle('active');
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!notifDropdown.contains(e.target) && e.target !== notifBtn) {
-                notifDropdown.classList.remove('active');
-            }
-        });
-        
-        // Prevent dropdown from closing when clicking inside it
-        notifDropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-
     // Profile Tabs
     const profileTabs = document.querySelectorAll('.profile-tab');
     const tabContents = document.querySelectorAll('.tab-content');

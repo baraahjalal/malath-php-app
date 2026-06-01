@@ -1,12 +1,11 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-if (session_status() === PHP_SESSION_NONE) session_start();
-require_once '../includes/db.php';
-require_once '../includes/csrf.php';
+require_once __DIR__ . '/../app/bootstrap.php';
+use App\Core\Database;
+$pdo = Database::getInstance()->getPdo();
 
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'notifications' => [], 'unread' => 0]);
-    exit;
+    echo json_encode(['success' => false, 'notifications' => [], 'unread' => 0]); exit;
 }
 
 $user_id = (int)$_SESSION['user_id'];
@@ -16,23 +15,17 @@ if ($action === 'mark_read' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? '');
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
         http_response_code(403);
-        echo json_encode(['success' => false]);
-        exit;
+        echo json_encode(['success' => false]); exit;
     }
     $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?")->execute([$user_id]);
-    echo json_encode(['success' => true]);
-    exit;
+    echo json_encode(['success' => true]); exit;
 }
 
-// جلب آخر 15 إشعار
 $st = $pdo->prepare("
     SELECT n.id, n.type, n.is_read, n.created_at, n.post_id,
            u.name AS actor_name, u.avatar AS actor_avatar
-    FROM notifications n
-    JOIN users u ON n.actor_id = u.id
-    WHERE n.user_id = ?
-    ORDER BY n.created_at DESC
-    LIMIT 15
+    FROM notifications n JOIN users u ON n.actor_id=u.id
+    WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT 15
 ");
 $st->execute([$user_id]);
 $rows = $st->fetchAll();
@@ -41,16 +34,8 @@ $unread = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AN
 $unread->execute([$user_id]);
 $unread_count = (int)$unread->fetchColumn();
 
-$labels = [
-    'like'    => 'أعجبت بمنشورك',
-    'comment' => 'علّقت على منشورك',
-    'join'    => 'انضمت لنفس مجتمعك',
-];
-$icons = [
-    'like'    => 'fa-heart',
-    'comment' => 'fa-comment-dots',
-    'join'    => 'fa-users',
-];
+$labels = ['like'=>'أعجبت بمنشورك','comment'=>'علّقت على منشورك','join'=>'انضمت لنفس مجتمعك'];
+$icons  = ['like'=>'fa-heart','comment'=>'fa-comment-dots','join'=>'fa-users'];
 
 $items = [];
 foreach ($rows as $r) {

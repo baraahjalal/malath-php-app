@@ -10,9 +10,11 @@ class AuthController extends Controller {
         if (isset($_SESSION['user_id'])) {
             $this->redirect('/malath-php-app/index.php');
         }
+        $allowed     = ['index.php','community.php','profile.php','article.php'];
+        $raw         = $_GET['redirect'] ?? 'index.php';
+        $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index.php';
         $error       = '';
         $email       = '';
-        $redirect_to = 'index.php';
         $this->view('auth.login', compact('error', 'email', 'redirect_to'));
     }
 
@@ -22,7 +24,7 @@ class AuthController extends Controller {
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $allowed  = ['index.php','community.php','profile.php','article.php'];
-        $raw      = $_GET['redirect'] ?? 'index.php';
+        $raw      = $_POST['redirect_to'] ?? ($_GET['redirect'] ?? 'index.php');
         $redirect_to = in_array($raw, $allowed, true) ? $raw : 'index.php';
 
         $error = '';
@@ -45,8 +47,9 @@ class AuthController extends Controller {
     }
 
     public function showRegister(): void {
-        $error = ''; $success = ''; $first_name = ''; $last_name = ''; $email = '';
-        $this->view('auth.register', compact('error', 'success', 'first_name', 'last_name', 'email'));
+        $error = ''; $success = ''; $auto_redirect = false;
+        $first_name = ''; $last_name = ''; $email = '';
+        $this->view('auth.register', compact('error', 'success', 'auto_redirect', 'first_name', 'last_name', 'email'));
     }
 
     public function handleRegister(): void {
@@ -56,7 +59,7 @@ class AuthController extends Controller {
         $last_name  = trim($_POST['last_name']  ?? '');
         $email      = trim($_POST['email']      ?? '');
         $password   = $_POST['password']        ?? '';
-        $error      = ''; $success = '';
+        $error      = ''; $success = ''; $auto_redirect = false;
 
         if (!$first_name || !$last_name || !$email || !$password) {
             $error = "جميع الحقول مطلوبة!";
@@ -70,13 +73,13 @@ class AuthController extends Controller {
             try {
                 $model->create($first_name . ' ' . $last_name, $email, password_hash($password, PASSWORD_DEFAULT));
                 $success = "تم إنشاء الحساب بنجاح! سيتم توجيهك لصفحة الدخول...";
-                echo '<script>setTimeout(()=>{ window.location.href="/malath-php-app/login.php"; }, 3000);</script>';
+                $auto_redirect = true;
             } catch (\PDOException $e) {
                 error_log("Register: " . $e->getMessage());
                 $error = "حدث خطأ في الخادم، يرجى المحاولة لاحقاً.";
             }
         }
-        $this->view('auth.register', compact('error', 'success', 'first_name', 'last_name', 'email'));
+        $this->view('auth.register', compact('error', 'success', 'auto_redirect', 'first_name', 'last_name', 'email'));
     }
 
     public function logout(): void {
