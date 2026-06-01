@@ -232,7 +232,6 @@
               <option value="vent">🗣 فضفضة</option>
               <option value="advice">💡 طلب نصيحة</option>
               <option value="question">❓ سؤال</option>
-              <option value="article">📝 مقالة رسمية</option>
             </select>
             <select name="post_community_id" class="create-post-select" required>
               <?php foreach($communities as $c): if(in_array($c['id'], $user_communities)): ?>
@@ -315,12 +314,17 @@
                     <p class="no-comments-msg" style="color:var(--secondary); font-size:0.9rem; text-align:center; margin-bottom:1rem;">لا توجد تعليقات بعد. كوني أول من يعلق!</p>
                 <?php else: ?>
                     <?php foreach($comments as $comm): ?>
-                        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                        <div data-comment-id="<?=$comm['id']?>" style="display:flex; gap:1rem; margin-bottom:1rem;">
                             <img src="<?=htmlspecialchars($comm['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" style="width:2.5rem; height:2.5rem; border-radius:50%; object-fit:cover;">
                             <div style="background-color:#ffffff; padding:1rem 1.2rem; border-radius:1.5rem; border-top-right-radius:0; flex-grow:1; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-                                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                                     <b style="font-size:0.9rem; color:var(--primary-dark); font-family:var(--font-headline); font-weight:800;"><?=htmlspecialchars($comm['user_name'])?></b>
-                                    <small style="color:var(--secondary); font-size:0.75rem;"><?=date('Y-m-d H:i', strtotime($comm['created_at']))?></small>
+                                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                                        <small style="color:var(--secondary); font-size:0.75rem;"><?=date('Y-m-d H:i', strtotime($comm['created_at']))?></small>
+                                        <?php if($user_id && $comm['user_id'] == $user_id): ?>
+                                        <button type="button" onclick="ajaxDeleteComment(<?=$comm['id']?>, <?=$post['id']?>, this)" title="مسح التعليق" style="background:none;border:none;color:#be185d;cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:0.4rem;transition:background 0.2s;line-height:1;" onmouseover="this.style.backgroundColor='#fce7f3'" onmouseout="this.style.backgroundColor='transparent'"><i class="fa-solid fa-trash-can"></i></button>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                                 <div style="font-size:0.95rem; color:var(--on-surface); line-height:1.6;"><?=nl2br(htmlspecialchars($comm['content']))?></div>
                             </div>
@@ -382,6 +386,19 @@ async function ajaxSave(btn) {
     else { btn.classList.remove('active-save'); icon.className = 'fa-regular fa-bookmark'; label.textContent = 'حفظ'; }
 }
 
+async function ajaxDeleteComment(commentId, postId, btn) {
+    if (!confirm('هل أنتِ متأكدة من مسح هذا التعليق؟')) return;
+    const fd = new FormData();
+    fd.append('comment_id', commentId);
+    const res = await fetch('/malath-php-app/api/delete_comment.php', { method:'POST', body:fd, headers:{'X-CSRF-Token':CSRF_TOKEN} });
+    const data = await res.json();
+    if (!data.success) { console.error('[Delete Comment] failed:', data); return; }
+    const commentDiv = btn.closest('[data-comment-id]');
+    commentDiv.remove();
+    const countEl = document.getElementById('comment-count-' + postId);
+    if (countEl) countEl.textContent = (Math.max(0, parseInt(countEl.textContent) - 1)) + ' تعليق';
+}
+
 async function ajaxComment(postId) {
     const textarea = document.getElementById('comment-input-' + postId);
     const content = textarea.value.trim();
@@ -396,12 +413,15 @@ async function ajaxComment(postId) {
     const list = document.getElementById('comments-list-' + postId);
     const noMsg = list.querySelector('.no-comments-msg');
     if (noMsg) noMsg.remove();
-    const html = `<div style="display:flex;gap:1rem;margin-bottom:1rem;">
+    const html = `<div data-comment-id="${data.comment_id}" style="display:flex;gap:1rem;margin-bottom:1rem;">
         <img src="${data.user_avatar}" alt="" style="width:2.5rem;height:2.5rem;border-radius:50%;object-fit:cover;">
         <div style="background:#fff;padding:1rem 1.2rem;border-radius:1.5rem;border-top-right-radius:0;flex-grow:1;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
                 <b style="font-size:.9rem;color:var(--primary-dark);font-family:var(--font-headline);font-weight:800;">${data.user_name}</b>
-                <small style="color:var(--secondary);font-size:.75rem;">${data.created_at}</small>
+                <div style="display:flex;align-items:center;gap:.5rem;">
+                    <small style="color:var(--secondary);font-size:.75rem;">${data.created_at}</small>
+                    <button type="button" onclick="ajaxDeleteComment(${data.comment_id}, ${postId}, this)" title="مسح التعليق" style="background:none;border:none;color:#be185d;cursor:pointer;font-size:.75rem;padding:.2rem .4rem;border-radius:.4rem;transition:background .2s;line-height:1;" onmouseover="this.style.backgroundColor='#fce7f3'" onmouseout="this.style.backgroundColor='transparent'"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
             </div>
             <div style="font-size:.95rem;color:var(--on-surface);line-height:1.6;">${data.content.replace(/\n/g,'<br>')}</div>
         </div>

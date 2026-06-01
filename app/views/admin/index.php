@@ -62,6 +62,12 @@
         <a href="/malath-php-app/dashboard.php?tab=overview" class="admin-nav-link <?= $tab==='overview'?'active':'' ?>"><i class="fa-solid fa-house"></i> الإحصائيات</a>
         <a href="/malath-php-app/dashboard.php?tab=users"    class="admin-nav-link <?= $tab==='users'?'active':'' ?>"><i class="fa-solid fa-users"></i> إدارة العضوات</a>
         <a href="/malath-php-app/dashboard.php?tab=posts"    class="admin-nav-link <?= $tab==='posts'?'active':'' ?>"><i class="fa-solid fa-comments"></i> إدارة المنشورات</a>
+        <a href="/malath-php-app/dashboard.php?tab=articles" class="admin-nav-link <?= $tab==='articles'?'active':'' ?>" style="position:relative;">
+            <i class="fa-solid fa-newspaper"></i> مقالات معلّقة
+            <?php if($pending_count > 0): ?>
+            <span style="background:#e03052;color:#fff;font-size:.7rem;font-weight:800;padding:.15rem .55rem;border-radius:2rem;margin-right:.4rem;"><?= $pending_count ?></span>
+            <?php endif; ?>
+        </a>
         <a href="/malath-php-app/community.php" class="admin-nav-link"><i class="fa-solid fa-globe"></i> الموقع الرئيسي</a>
     </nav>
     <div class="sidebar-footer">
@@ -72,7 +78,7 @@
 <main class="admin-main">
     <header class="admin-header">
         <h2 class="font-headline font-bold text-primary-dark" style="font-size:1.3rem;margin:0;">
-            <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات'][$tab] ?? 'لوحة التحكم' ?>
+            <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات','articles'=>'مقالات معلّقة'][$tab] ?? 'لوحة التحكم' ?>
         </h2>
         <div style="display:flex;align-items:center;gap:1rem;">
             <span style="font-size:.9rem;color:var(--secondary);">مرحباً،</span>
@@ -83,7 +89,7 @@
     <div class="dashboard-content">
         <?php if(isset($_GET['msg'])): ?>
         <div class="alert-banner alert-success">
-            <?= ['post_deleted'=>'✅ تم حذف المنشور.','user_deleted'=>'✅ تم حذف العضو.'][$_GET['msg']] ?? '' ?>
+            <?= ['post_deleted'=>'✅ تم حذف المنشور.','user_deleted'=>'✅ تم حذف العضو.','article_approved'=>'✅ تمت الموافقة — المقالة منشورة الآن.','article_rejected'=>'🗑 تم رفض المقالة.'][$_GET['msg']] ?? '' ?>
         </div>
         <?php endif; ?>
 
@@ -206,6 +212,57 @@
                 </tbody>
             </table>
         </div>
+
+        <?php elseif($tab === 'articles'): ?>
+        <?php if(empty($pending_articles)): ?>
+        <div class="data-card" style="text-align:center;padding:4rem 2rem;">
+            <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#10b981;margin-bottom:1rem;display:block;"></i>
+            <h3 style="font-family:var(--font-headline);color:var(--secondary);margin:0;">لا توجد مقالات معلّقة — كل شيء راجعتِه ✅</h3>
+        </div>
+        <?php else: ?>
+        <div style="display:grid;gap:1.5rem;">
+            <?php foreach($pending_articles as $a): ?>
+            <div class="data-card">
+                <div style="padding:1.5rem 2rem;">
+                    <div style="display:flex;align-items:flex-start;gap:1.2rem;margin-bottom:1rem;">
+                        <img src="/malath-php-app/<?= htmlspecialchars($a['author_avatar'] ?: 'assets/images/default-avatar.png') ?>"
+                             style="width:2.6rem;height:2.6rem;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+                        <div style="flex-grow:1;min-width:0;">
+                            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.4rem;">
+                                <strong style="font-family:var(--font-headline);color:var(--primary-dark);"><?= htmlspecialchars($a['author_name']) ?></strong>
+                                <span class="badge-type badge-article"><?= htmlspecialchars($a['community_name']) ?></span>
+                                <span style="color:var(--secondary);font-size:.8rem;"><?= date('Y-m-d', strtotime($a['created_at'])) ?></span>
+                            </div>
+                            <h3 style="font-family:var(--font-headline);font-size:1.1rem;font-weight:900;color:var(--on-surface);margin:0 0 .6rem;">
+                                <?= htmlspecialchars($a['title'] ?: mb_substr($a['content'], 0, 70) . '…') ?>
+                            </h3>
+                            <p style="color:var(--secondary);font-size:.9rem;line-height:1.65;margin:0;">
+                                <?= htmlspecialchars(mb_substr(strip_tags($a['content']), 0, 200)) ?>…
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.75rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--outline-variant);">
+                        <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;">
+                            <?php csrf_field(); ?>
+                            <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
+                            <button type="submit" name="approve_article" class="btn-sm" style="background:#dcfce7;color:#166534;padding:.5rem 1.6rem;font-size:.88rem;">
+                                ✅ موافقة — نشر الآن
+                            </button>
+                        </form>
+                        <form method="POST" action="/malath-php-app/dashboard.php" style="display:inline;"
+                              onsubmit="return confirm('رفض هذه المقالة نهائياً؟');">
+                            <?php csrf_field(); ?>
+                            <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
+                            <button type="submit" name="reject_article" class="btn-sm btn-danger" style="padding:.5rem 1.6rem;font-size:.88rem;">
+                                ❌ رفض
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
         <?php elseif($tab === 'posts'): ?>
         <div class="data-card">

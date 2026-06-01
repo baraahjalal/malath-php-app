@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\AdminModel;
+use App\Models\ArticleModel;
 
 class AdminController extends Controller {
 
@@ -12,10 +13,13 @@ class AdminController extends Controller {
         $model = new AdminModel();
         $stats = $model->getStats();
 
-        $recent_posts = [];
-        $recent_users = [];
-        $users        = [];
-        $posts        = [];
+        $recent_posts     = [];
+        $recent_users     = [];
+        $users            = [];
+        $posts            = [];
+        $pending_articles = [];
+        $articleModel     = new ArticleModel();
+        $pending_count    = $articleModel->countPending();
 
         if ($tab === 'overview') {
             $recent_posts = $model->getRecentPosts(8);
@@ -25,12 +29,15 @@ class AdminController extends Controller {
             $users  = $model->getUsers($search);
         } elseif ($tab === 'posts') {
             $posts = $model->getPosts();
+        } elseif ($tab === 'articles') {
+            $pending_articles = $articleModel->getPending();
         }
 
         extract($stats);
         $this->view('admin.index', compact(
             'tab','total_users','total_posts','total_comments','total_likes',
-            'new_users_week','new_posts_week','recent_posts','recent_users','users','posts'
+            'new_users_week','new_posts_week','recent_posts','recent_users','users','posts',
+            'pending_articles','pending_count'
         ));
     }
 
@@ -57,6 +64,16 @@ class AdminController extends Controller {
             $role = $_POST['new_role'] === 'admin' ? 'admin' : 'user';
             $model->setUserRole($uid, $role);
             $this->redirect('/malath-php-app/dashboard.php?tab=users');
+        }
+
+        if (isset($_POST['approve_article'])) {
+            (new ArticleModel())->approve((int)$_POST['article_id']);
+            $this->redirect('/malath-php-app/dashboard.php?tab=articles&msg=article_approved');
+        }
+
+        if (isset($_POST['reject_article'])) {
+            (new ArticleModel())->reject((int)$_POST['article_id']);
+            $this->redirect('/malath-php-app/dashboard.php?tab=articles&msg=article_rejected');
         }
 
         $this->redirect('/malath-php-app/dashboard.php');

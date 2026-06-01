@@ -45,6 +45,14 @@ class PostModel extends Model {
         $this->query("UPDATE posts SET content = ? WHERE id = ? AND user_id = ?", [$content, $postId, $userId]);
     }
 
+    public function deleteComment(int $commentId, int $userId): bool {
+        $st = $this->query(
+            "DELETE FROM post_comments WHERE id = ? AND user_id = ?",
+            [$commentId, $userId]
+        );
+        return $st->rowCount() > 0;
+    }
+
     public function getComments(int $postId): array {
         return $this->query("
             SELECT pc.*, u.name AS user_name, u.avatar AS user_avatar

@@ -13,8 +13,8 @@ class UserModel extends Model {
 
     public function create(string $name, string $email, string $passwordHash): int {
         $this->query(
-            "INSERT INTO users (name, email, password) VALUES (?,?,?)",
-            [$name, $email, $passwordHash]
+            "INSERT INTO users (name, email, password, avatar) VALUES (?,?,?,?)",
+            [$name, $email, $passwordHash, 'assets/images/default-avatar.png']
         );
         return (int)$this->db->lastInsertId();
     }

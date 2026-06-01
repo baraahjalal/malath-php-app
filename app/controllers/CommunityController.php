@@ -60,7 +60,8 @@ class CommunityController extends Controller {
         } elseif (isset($_POST['submit_post'])) {
             $cid     = intval($_POST['post_community_id'] ?? 0);
             $content = trim($_POST['content'] ?? '');
-            $type    = $_POST['type'] ?? 'vent';
+            $allowed = ['vent', 'advice', 'question'];
+            $type    = in_array($_POST['type'] ?? '', $allowed) ? $_POST['type'] : 'vent';
             $title   = trim($_POST['post_title'] ?? '');
             if ($cid && in_array($cid, $user_communities) && $content) {
                 $postModel->create($user_id, $cid, $type, $title, $content);
