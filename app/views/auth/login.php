@@ -211,6 +211,17 @@
                         </div>
                     </div>
 
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.25rem;">
+                        <input type="checkbox"
+                               name="remember_me"
+                               id="remember_me"
+                               value="1"
+                               class="checkbox-custom">
+                        <label for="remember_me" style="cursor:pointer; font-size:0.9rem; color:var(--secondary); user-select:none;">
+                            تذكريني لمدة 30 يوماً
+                        </label>
+                    </div>
+
                     <button type="submit" class="btn-primary" style="width: 100%;">تسجيل الدخول</button>
                 </form>
 
