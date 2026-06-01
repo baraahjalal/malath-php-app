@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\EmailService;
 use App\Models\UserModel;
 
 class AuthController extends Controller {
@@ -71,7 +72,10 @@ class AuthController extends Controller {
             $error = "البريد الإلكتروني مستخدم بالفعل.";
         } else {
             try {
-                $model->create($first_name . ' ' . $last_name, $email, password_hash($password, PASSWORD_DEFAULT));
+                $fullName = $first_name . ' ' . $last_name;
+                $model->create($fullName, $email, password_hash($password, PASSWORD_DEFAULT));
+                EmailService::sendWelcome($fullName, $email);
+                EmailService::sendNewUserNotification($fullName, $email);
                 $success = "تم إنشاء الحساب بنجاح! سيتم توجيهك لصفحة الدخول...";
                 $auto_redirect = true;
             } catch (\PDOException $e) {
