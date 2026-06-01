@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\EmailService;
 use App\Models\AdminModel;
 use App\Models\ArticleModel;
 
@@ -67,12 +68,34 @@ class AdminController extends Controller {
         }
 
         if (isset($_POST['approve_article'])) {
-            (new ArticleModel())->approve((int)$_POST['article_id']);
+            $articleModel = new ArticleModel();
+            $articleId    = (int)$_POST['article_id'];
+            $article      = $articleModel->getArticleWithAuthor($articleId);
+            $articleModel->approve($articleId);
+            if ($article) {
+                EmailService::sendArticleStatus(
+                    $article['author_email'],
+                    $article['author_name'],
+                    $article['title'],
+                    'approved'
+                );
+            }
             $this->redirect('/malath-php-app/dashboard.php?tab=articles&msg=article_approved');
         }
 
         if (isset($_POST['reject_article'])) {
-            (new ArticleModel())->reject((int)$_POST['article_id']);
+            $articleModel = new ArticleModel();
+            $articleId    = (int)$_POST['article_id'];
+            $article      = $articleModel->getArticleWithAuthor($articleId);
+            $articleModel->reject($articleId);
+            if ($article) {
+                EmailService::sendArticleStatus(
+                    $article['author_email'],
+                    $article['author_name'],
+                    $article['title'],
+                    'rejected'
+                );
+            }
             $this->redirect('/malath-php-app/dashboard.php?tab=articles&msg=article_rejected');
         }
 
