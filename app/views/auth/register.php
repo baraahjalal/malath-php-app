@@ -100,6 +100,46 @@
 }
 .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid var(--outline-variant); }
 .separator span { padding: 0 1rem; }
+
+/* Password Strength Indicator */
+.password-strength-container {
+    background: var(--surface-container);
+    padding: 1rem;
+    border-radius: 0.8rem;
+    border: 1px solid var(--outline-variant);
+}
+
+.strength-bar-wrapper {
+    width: 100%;
+    height: 6px;
+    background-color: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.password-rules li {
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.password-rules li.valid {
+    color: #10b981;
+}
+
+.password-rules li.valid i {
+    color: #10b981 !important;
+}
+
+.password-rules li.valid i::before {
+    content: "\f00c"; /* fa-check */
+}
 </style>
 
 <div class="login-page-wrapper">
@@ -164,8 +204,24 @@
                     <div class="input-group">
                         <label class="input-label">كلمة المرور</label>
                         <div class="input-icon-wrapper">
-                            <input name="password" class="form-control" placeholder="••••••••" type="password" required>
+                            <input name="password" id="register-password" class="form-control" placeholder="••••••••" type="password" required>
                             <i class="fa-solid fa-lock"></i>
+                        </div>
+                        
+                        <!-- Password Strength UI -->
+                        <div class="password-strength-container" style="display: none; margin-top: 0.5rem;">
+                            <div class="strength-bar-wrapper">
+                                <div id="strength-bar" class="strength-bar"></div>
+                            </div>
+                            <div id="strength-text" class="strength-text" style="font-size: 0.85rem; margin-top: 0.4rem; font-weight: bold;"></div>
+                            
+                            <ul class="password-rules" style="list-style: none; padding: 0; margin: 0.6rem 0 0 0; font-size: 0.8rem; color: var(--secondary);">
+                                <li id="rule-length"><i class="fa-solid fa-xmark" style="color: #ef4444; margin-left: 8px;"></i> 8 أحرف على الأقل</li>
+                                <li id="rule-upper"><i class="fa-solid fa-xmark" style="color: #ef4444; margin-left: 8px;"></i> حرف كبير (A-Z)</li>
+                                <li id="rule-lower"><i class="fa-solid fa-xmark" style="color: #ef4444; margin-left: 8px;"></i> حرف صغير (a-z)</li>
+                                <li id="rule-number"><i class="fa-solid fa-xmark" style="color: #ef4444; margin-left: 8px;"></i> رقم واحد على الأقل</li>
+                                <li id="rule-special"><i class="fa-solid fa-xmark" style="color: #ef4444; margin-left: 8px;"></i> رمز خاص (!@#$%^&*)</li>
+                            </ul>
                         </div>
                     </div>
 
@@ -187,5 +243,71 @@
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('register-password');
+    const strengthContainer = document.querySelector('.password-strength-container');
+    const strengthBar = document.getElementById('strength-bar');
+    const strengthText = document.getElementById('strength-text');
+    
+    const rules = {
+        length: { regex: /.{8,}/, el: document.getElementById('rule-length') },
+        upper: { regex: /[A-Z]/, el: document.getElementById('rule-upper') },
+        lower: { regex: /[a-z]/, el: document.getElementById('rule-lower') },
+        number: { regex: /[0-9]/, el: document.getElementById('rule-number') },
+        special: { regex: /[!@#$%^&*(),.?":{}|<>_~\-\+=]/, el: document.getElementById('rule-special') }
+    };
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            
+            if (val.length > 0) {
+                strengthContainer.style.display = 'block';
+            } else {
+                strengthContainer.style.display = 'none';
+                return;
+            }
+
+            let passedRules = 0;
+
+            for (const key in rules) {
+                const rule = rules[key];
+                if (rule.regex.test(val)) {
+                    rule.el.classList.add('valid');
+                    passedRules++;
+                } else {
+                    rule.el.classList.remove('valid');
+                }
+            }
+
+            // Calculate strength
+            let width = '0%';
+            let color = '';
+            let text = '';
+
+            if (passedRules <= 2) {
+                width = '33.33%';
+                color = '#ef4444'; // Red
+                text = 'قوة كلمة المرور: ضعيفة';
+            } else if (passedRules <= 4) {
+                width = '66.66%';
+                color = '#f59e0b'; // Yellow
+                text = 'قوة كلمة المرور: متوسطة';
+            } else {
+                width = '100%';
+                color = '#10b981'; // Green
+                text = 'قوة كلمة المرور: قوية';
+            }
+
+            strengthBar.style.width = width;
+            strengthBar.style.backgroundColor = color;
+            strengthText.style.color = color;
+            strengthText.textContent = text;
+        });
+    }
+});
+</script>
 
 <?php include ROOT_PATH . '/includes/footer.php'; ?>

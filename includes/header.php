@@ -125,6 +125,12 @@
             <img src="<?= htmlspecialchars($user_avatar); ?>" alt="Profile">
         </a>
         
+        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+            <a href="dashboard.php" title="لوحة التحكم" class="btn-logout-icon" style="background-color: var(--primary-container); color: var(--primary-dark);">
+                <i class="fa-solid fa-chart-line"></i>
+            </a>
+        <?php endif; ?>
+        
         <!-- زر خروج -->
         <a href="logout.php" title="تسجيل الخروج" class="btn-logout-icon">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>

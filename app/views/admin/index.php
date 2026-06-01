@@ -68,7 +68,7 @@
             <span style="background:#e03052;color:#fff;font-size:.7rem;font-weight:800;padding:.15rem .55rem;border-radius:2rem;margin-right:.4rem;"><?= $pending_count ?></span>
             <?php endif; ?>
         </a>
-        <a href="/malath-php-app/community.php" class="admin-nav-link"><i class="fa-solid fa-globe"></i> الموقع الرئيسي</a>
+        <a href="/malath-php-app/index.php" class="admin-nav-link"><i class="fa-solid fa-globe"></i> الموقع الرئيسي</a>
     </nav>
     <div class="sidebar-footer">
         <a href="/malath-php-app/logout.php" class="admin-nav-link" style="color:var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج</a>
