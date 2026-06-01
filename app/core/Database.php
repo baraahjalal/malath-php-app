@@ -6,12 +6,12 @@ class Database {
     private \PDO $pdo;
 
     private function __construct() {
-        $host    = 'localhost';
-        $db      = 'malath';
+        $host    = 'mysql.railway.internal';
+        $db      = 'railway';
         $user    = 'root';
-        $pass    = '';
+        $pass    = 'ozAWpQhQQFCuedbIpGNfzIbvVnTxRcvc';
         $charset = 'utf8mb4';
-        $dsn     = "mysql:host=$host;dbname=$db;charset=$charset";
+ $dsn     = "mysql:host=$host;port=3306;dbname=$db;charset=$charset";
         $options = [
             \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
