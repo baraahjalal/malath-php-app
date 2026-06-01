@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\EmailService;
+use App\Core\RememberMeService;
 use App\Models\UserModel;
 
 class AuthController extends Controller {
@@ -38,6 +39,9 @@ class AuthController extends Controller {
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'] ?? 'user';
+                if (!empty($_POST['remember_me'])) {
+                    (new RememberMeService())->create((int)$user['id']);
+                }
                 $dest = ($_SESSION['user_role'] === 'admin') ? 'dashboard' : $redirect_to;
                 $this->redirect('/malath-php-app/' . $dest);
             } else {
@@ -87,6 +91,7 @@ class AuthController extends Controller {
     }
 
     public function logout(): void {
+        (new RememberMeService())->delete();
         session_unset();
         session_destroy();
         $this->redirect('/malath-php-app/index');
