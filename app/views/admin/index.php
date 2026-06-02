@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_generate()) ?>">
+    <meta name="current-user-id" content="<?= (int)$_SESSION['user_id'] ?>">
     <title>لوحة التحكم | ملاذ</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -71,9 +73,20 @@
             .data-card-header { padding:1rem; flex-direction:column; gap:1rem; align-items:flex-start; }
             .data-table th, .data-table td { padding:0.8rem; font-size:0.85rem; }
         }
+        .admin-modal-spinner { width:2.5rem;height:2.5rem;border:3px solid var(--surface-container-high);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body>
+
+<div id="adminModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;overflow-y:auto;padding:2rem 1rem;" onclick="if(event.target===this)closeAdminModal()">
+    <div style="background:#fff;border-radius:1.5rem;max-width:700px;margin:0 auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <button onclick="closeAdminModal()" style="position:absolute;top:1rem;left:1rem;background:var(--surface-container);border:none;border-radius:50%;width:2.2rem;height:2.2rem;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:var(--secondary);z-index:10;">&times;</button>
+        <div id="adminModalBody" style="min-height:200px;display:flex;align-items:center;justify-content:center;">
+            <div class="admin-modal-spinner"></div>
+        </div>
+    </div>
+</div>
 
 <div class="admin-overlay" id="adminOverlay"></div>
 
