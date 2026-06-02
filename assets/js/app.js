@@ -85,7 +85,7 @@ function _articleActions(a) {
 }
 
 function _articleModalHtml(a) {
-    const statusLabel = { pending:'معلّقة', approved:'منشورة', rejected:'مرفوضة' }[a.status] ?? a.status;
+    const statusLabel = { pending:'معلّقة', approved:'منشورة', rejected:'مرفوضة' }[a.status] ?? escHtml(a.status);
     const statusColor = { pending:'#d97706', approved:'#16a34a', rejected:'#b91c1c' }[a.status] ?? '#888';
     return `
     <div style="padding:2rem;">
@@ -147,7 +147,7 @@ function _updateArticleActionBtns(row, status, id) {
 // ── Post modal ───────────────────────────────────────────────────────────────
 
 function _postModalHtml(p) {
-    const typeLabel = { vent:'فضفضة', advice:'نصيحة', question:'سؤال', article:'مقالة' }[p.type] ?? p.type;
+    const typeLabel = { vent:'فضفضة', advice:'نصيحة', question:'سؤال', article:'مقالة' }[p.type] ?? escHtml(p.type);
     const typeClass = { vent:'badge-vent', advice:'badge-advice', question:'badge-question', article:'badge-article' }[p.type] ?? '';
     const commentsHtml = (p.comments ?? []).map(c => `
         <div style="padding:.7rem 0;border-bottom:1px solid var(--surface-container-high);">
