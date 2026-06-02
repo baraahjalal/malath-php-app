@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 01, 2026 at 04:57 PM
+-- Generation Time: Jun 01, 2026 at 11:17 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -50,6 +50,13 @@ CREATE TABLE `articles` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `articles`
+--
+
+INSERT INTO `articles` (`id`, `user_id`, `community_id`, `title`, `content`, `image`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 4, 'ةةةةة', 'نتتتنتننتنتتناخاخاخاخاخهاخاخعاخاخنتتتتتتتتتتتتتتتتتتت', NULL, 'approved', '2026-06-01 18:09:01', '2026-06-01 18:09:17');
 
 -- --------------------------------------------------------
 
@@ -192,6 +199,26 @@ CREATE TABLE `post_saves` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `remember_tokens`
+--
+
+CREATE TABLE `remember_tokens` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token_hash` varchar(64) NOT NULL,
+  `expires_at` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `remember_tokens`
+--
+
+INSERT INTO `remember_tokens` (`id`, `user_id`, `token_hash`, `expires_at`) VALUES
+(1, 2, '42deac1ac0d6c3cc5e1977f951639a1515dfb75f9dca7fe8dd877598da2f28bb', '2026-07-01 23:16:47');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reports`
 --
 
@@ -204,25 +231,6 @@ CREATE TABLE `reports` (
   `reason` text NOT NULL,
   `status` enum('pending','resolved') DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
--- --------------------------------------------------------
-
---
--- Table structure for table `remember_tokens`
---
-
-CREATE TABLE `remember_tokens` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `token_hash` varchar(64) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `token_hash` (`token_hash`),
-  CONSTRAINT `remember_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -248,7 +256,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `avatar`, `bio`, `created_at`, `updated_at`, `role`) VALUES
-(1, 'براءة عريبي', 'baraahjalall@gmail.com', '$2y$10$EgWHj1y1vpNEe/maRMm1xuPmtJ.tU6Pz7FbijA1fnch57P2wiaxja', 'assets/images/default-avatar.png', NULL, '2026-06-01 15:22:49', '2026-06-01 15:23:42', 'admin');
+(1, 'براءة عريبي', 'baraahjalall@gmail.com', '$2y$10$EgWHj1y1vpNEe/maRMm1xuPmtJ.tU6Pz7FbijA1fnch57P2wiaxja', 'assets/images/default-avatar.png', NULL, '2026-06-01 15:22:49', '2026-06-01 15:23:42', 'admin'),
+(2, 'براءة جلال', 'barajalal01@gmail.com', '$2y$10$EQuVtVfqPmxDzWeq3R/sNe5u8yVW/uPywLNi9nPhx5EGzYBIQKZ4m', 'assets/images/default-avatar.png', NULL, '2026-06-01 23:15:12', '2026-06-01 23:15:12', 'user');
 
 -- --------------------------------------------------------
 
@@ -351,6 +360,14 @@ ALTER TABLE `post_saves`
   ADD UNIQUE KEY `unique_save` (`post_id`,`user_id`);
 
 --
+-- Indexes for table `remember_tokens`
+--
+ALTER TABLE `remember_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `token_hash` (`token_hash`);
+
+--
 -- Indexes for table `reports`
 --
 ALTER TABLE `reports`
@@ -383,7 +400,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `bookmarks`
@@ -440,6 +457,12 @@ ALTER TABLE `post_saves`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `remember_tokens`
+--
+ALTER TABLE `remember_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
@@ -449,7 +472,7 @@ ALTER TABLE `reports`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -473,6 +496,12 @@ ALTER TABLE `articles`
 ALTER TABLE `posts`
   ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `posts_ibfk_2` FOREIGN KEY (`community_id`) REFERENCES `communities` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `remember_tokens`
+--
+ALTER TABLE `remember_tokens`
+  ADD CONSTRAINT `remember_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `user_communities`
