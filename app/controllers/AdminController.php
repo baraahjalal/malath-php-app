@@ -19,6 +19,7 @@ class AdminController extends Controller {
         $users            = [];
         $posts            = [];
         $pending_articles = [];
+        $all_articles     = [];
         $articleModel     = new ArticleModel();
         $pending_count    = $articleModel->countPending();
 
@@ -31,14 +32,14 @@ class AdminController extends Controller {
         } elseif ($tab === 'posts') {
             $posts = $model->getPosts();
         } elseif ($tab === 'articles') {
-            $pending_articles = $articleModel->getPending();
+            $all_articles = $model->getAllArticles();
         }
 
         extract($stats);
         $this->view('admin.index', compact(
             'tab','total_users','total_posts','total_comments','total_likes',
             'new_users_week','new_posts_week','recent_posts','recent_users','users','posts',
-            'pending_articles','pending_count'
+            'pending_articles','pending_count','all_articles'
         ));
     }
 

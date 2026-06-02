@@ -53,6 +53,19 @@ class AdminModel extends Model {
         ")->fetchAll();
     }
 
+    public function getAllArticles(): array {
+        return $this->query("
+            SELECT a.id, a.title, a.content, a.image, a.status, a.created_at,
+                   u.name AS author_name, u.avatar AS author_avatar,
+                   c.name AS community_name, c.slug AS community_slug
+            FROM articles a
+            JOIN users u  ON a.user_id      = u.id
+            JOIN communities c ON a.community_id = c.id
+            ORDER BY a.created_at DESC
+            LIMIT 100
+        ")->fetchAll();
+    }
+
     public function deletePost(int $postId): void {
         $this->query("DELETE FROM posts WHERE id = ?", [$postId]);
     }
