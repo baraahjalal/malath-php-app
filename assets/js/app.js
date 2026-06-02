@@ -269,6 +269,7 @@ async function adminDeleteUser(id) {
 function applyArticleFilter(filter) {
     document.querySelectorAll('.article-filter-btn').forEach(btn => {
         const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('active', isActive);
         btn.style.background = isActive ? 'var(--primary-gradient)' : 'var(--surface-container)';
         btn.style.color      = isActive ? '#fff' : 'var(--on-surface)';
     });

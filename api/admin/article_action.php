@@ -27,7 +27,7 @@ $pdo          = Database::getInstance()->getPdo();
 $articleModel = new ArticleModel();
 
 if ($action === 'delete') {
-    $pdo->prepare("DELETE FROM articles WHERE id = ?")->execute([$id]);
+    $articleModel->deleteById($id);
     echo json_encode(['success' => true, 'action' => 'delete']); exit;
 }
 

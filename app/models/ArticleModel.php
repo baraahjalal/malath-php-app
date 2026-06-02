@@ -113,6 +113,10 @@ class ArticleModel extends Model {
         return $row ?: null;
     }
 
+    public function deleteById(int $id): void {
+        $this->query("DELETE FROM articles WHERE id = ?", [$id]);
+    }
+
     public function toggleSave(int $userId, int $articleId): bool {
         $exists = (int)$this->query(
             "SELECT COUNT(*) FROM bookmarks WHERE user_id = ? AND article_id = ?",
