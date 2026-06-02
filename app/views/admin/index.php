@@ -224,15 +224,21 @@
             </form>
             <div class="table-responsive">
                 <table class="data-table">
-                    <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
+                    <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th><th>معاينة</th><th>إجراءات</th></tr></thead>
                     <tbody>
                     <?php foreach($users as $u): ?>
-                    <tr>
+                    <tr data-user-id="<?= $u['id'] ?>">
                         <td style="color:var(--secondary);"><?= $u['id'] ?></td>
                         <td><strong><?= htmlspecialchars($u['name']) ?></strong></td>
                         <td style="color:var(--secondary);"><?= htmlspecialchars($u['email']) ?></td>
-                        <td><span class="badge-role-<?= $u['role'] ?>"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
+                        <td><span class="badge-role-<?= $u['role'] ?> user-role-badge"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
                         <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
+                        <td>
+                            <button class="btn-sm btn-info"
+                                onclick="openAdminModal('/malath-php-app/api/admin/get_user.php?id=<?= $u['id'] ?>')">
+                                معاينة
+                            </button>
+                        </td>
                         <td>
                             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
                                 <?php if($u['id'] != $_SESSION['user_id']): ?>
@@ -240,7 +246,7 @@
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
                                     <input type="hidden" name="new_role" value="<?= $u['role']==='admin'?'user':'admin' ?>">
-                                    <button type="submit" name="toggle_role" class="btn-sm btn-info"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
+                                    <button type="submit" name="toggle_role" class="btn-sm btn-info user-toggle-btn"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
                                 </form>
                                 <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذه العضو نهائياً؟');">
                                     <?php csrf_field(); ?>
