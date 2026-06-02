@@ -260,55 +260,74 @@
         </div>
 
         <?php elseif($tab === 'articles'): ?>
-        <?php if(empty($pending_articles)): ?>
-        <div class="data-card" style="text-align:center;padding:4rem 2rem;">
-            <i class="fa-solid fa-circle-check" style="font-size:3rem;color:#10b981;margin-bottom:1rem;display:block;"></i>
-            <h3 style="font-family:var(--font-headline);color:var(--secondary);margin:0;">لا توجد مقالات معلّقة — كل شيء راجعتِه ✅</h3>
+<div class="data-card">
+    <div class="data-card-header">
+        <h3 class="font-headline font-bold text-primary-dark" style="margin:0;font-size:1.2rem;">
+            المقالات (<?= count($all_articles) ?>)
+        </h3>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="btn-sm article-filter-btn" data-filter="all"     onclick="applyArticleFilter('all')"     style="background:var(--primary-gradient);color:#fff;">الكل</button>
+            <button class="btn-sm article-filter-btn" data-filter="pending"  onclick="applyArticleFilter('pending')"  style="background:var(--surface-container);color:var(--on-surface);">معلّقة</button>
+            <button class="btn-sm article-filter-btn" data-filter="approved" onclick="applyArticleFilter('approved')" style="background:var(--surface-container);color:var(--on-surface);">منشورة</button>
+            <button class="btn-sm article-filter-btn" data-filter="rejected" onclick="applyArticleFilter('rejected')" style="background:var(--surface-container);color:var(--on-surface);">مرفوضة</button>
         </div>
-        <?php else: ?>
-        <div style="display:grid;gap:1.5rem;">
-            <?php foreach($pending_articles as $a): ?>
-            <div class="data-card">
-                <div style="padding:1.5rem 2rem;">
-                    <div style="display:flex;align-items:flex-start;gap:1.2rem;margin-bottom:1rem;">
-                        <img src="/malath-php-app/<?= htmlspecialchars($a['author_avatar'] ?: 'assets/images/default-avatar.png') ?>"
-                             style="width:2.6rem;height:2.6rem;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
-                        <div style="flex-grow:1;min-width:0;">
-                            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.4rem;">
-                                <strong style="font-family:var(--font-headline);color:var(--primary-dark);"><?= htmlspecialchars($a['author_name']) ?></strong>
-                                <span class="badge-type badge-article"><?= htmlspecialchars($a['community_name']) ?></span>
-                                <span style="color:var(--secondary);font-size:.8rem;"><?= date('Y-m-d', strtotime($a['created_at'])) ?></span>
-                            </div>
-                            <h3 style="font-family:var(--font-headline);font-size:1.1rem;font-weight:900;color:var(--on-surface);margin:0 0 .6rem;">
-                                <?= htmlspecialchars($a['title'] ?: mb_substr($a['content'], 0, 70) . '…') ?>
-                            </h3>
-                            <p style="color:var(--secondary);font-size:.9rem;line-height:1.65;margin:0;">
-                                <?= htmlspecialchars(mb_substr(strip_tags($a['content']), 0, 200)) ?>…
-                            </p>
-                        </div>
-                    </div>
-                    <div style="display:flex;gap:.75rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--outline-variant);">
-                        <form method="POST" action="/malath-php-app/dashboard" style="display:inline;">
-                            <?php csrf_field(); ?>
-                            <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
-                            <button type="submit" name="approve_article" class="btn-sm" style="background:#dcfce7;color:#166534;padding:.5rem 1.6rem;font-size:.88rem;">
-                                ✅ موافقة — نشر الآن
-                            </button>
-                        </form>
-                        <form method="POST" action="/malath-php-app/dashboard" style="display:inline;"
-                              onsubmit="return confirm('رفض هذه المقالة نهائياً؟');">
-                            <?php csrf_field(); ?>
-                            <input type="hidden" name="article_id" value="<?= $a['id'] ?>">
-                            <button type="submit" name="reject_article" class="btn-sm btn-danger" style="padding:.5rem 1.6rem;font-size:.88rem;">
-                                ❌ رفض
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>العنوان</th>
+                    <th>الكاتبة</th>
+                    <th>المجتمع</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                    <th>معاينة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach($all_articles as $a): ?>
+            <?php
+                $statusLabel = ['pending'=>'معلّقة','approved'=>'منشورة','rejected'=>'مرفوضة'][$a['status']] ?? $a['status'];
+                $statusBg    = ['pending'=>'#fef3c7','approved'=>'#dcfce7','rejected'=>'#fee2e2'][$a['status']] ?? '#eee';
+                $statusColor = ['pending'=>'#d97706','approved'=>'#166534','rejected'=>'#b91c1c'][$a['status']] ?? '#333';
+            ?>
+            <tr data-article-id="<?= $a['id'] ?>" data-status="<?= htmlspecialchars($a['status']) ?>">
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <strong><?= htmlspecialchars(mb_substr($a['title'] ?: mb_substr($a['content'],0,40), 0, 40)) ?></strong>
+                </td>
+                <td><?= htmlspecialchars($a['author_name']) ?></td>
+                <td><?= htmlspecialchars($a['community_name']) ?></td>
+                <td>
+                    <span class="article-status-badge" style="background:<?= $statusBg ?>;color:<?= $statusColor ?>;padding:.25rem .75rem;border-radius:1rem;font-size:.8rem;font-weight:700;">
+                        <?= $statusLabel ?>
+                    </span>
+                </td>
+                <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($a['created_at'])) ?></td>
+                <td>
+                    <button class="btn-sm btn-info"
+                        onclick="openAdminModal('/malath-php-app/api/admin/get_article.php?id=<?= $a['id'] ?>')">
+                        معاينة
+                    </button>
+                </td>
+                <td class="article-action-cell" style="white-space:nowrap;">
+                    <?php if($a['status'] === 'pending'): ?>
+                        <button class="btn-sm" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
+                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">❌ رفض</button>
+                    <?php elseif($a['status'] === 'approved'): ?>
+                        <button class="btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">🚫 رفض</button>
+                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
+                    <?php else: ?>
+                        <button class="btn-sm" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
+                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
+                    <?php endif; ?>
+                </td>
+            </tr>
             <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
         <?php elseif($tab === 'posts'): ?>
         <div class="data-card">
