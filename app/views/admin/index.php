@@ -336,10 +336,10 @@
             </div>
             <div class="table-responsive">
                 <table class="data-table">
-                    <thead><tr><th>الكاتبة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>❤ إعجاب</th><th>💬 تعليق</th><th>التاريخ</th><th>حذف</th></tr></thead>
+                    <thead><tr><th>الكاتبة</th><th>المجتمع</th><th>النوع</th><th>المحتوى</th><th>❤ إعجاب</th><th>💬 تعليق</th><th>التاريخ</th><th>معاينة</th><th>حذف</th></tr></thead>
                     <tbody>
                     <?php foreach($posts as $p): ?>
-                    <tr>
+                    <tr data-post-id="<?= $p['id'] ?>">
                         <td><strong><?= htmlspecialchars($p['user_name']) ?></strong></td>
                         <td><?= htmlspecialchars($p['community_name']) ?></td>
                         <td><span class="badge-type badge-<?= $p['type'] ?>"><?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$p['type']] ?? $p['type'] ?></span></td>
@@ -347,6 +347,12 @@
                         <td style="text-align:center;"><?= $p['likes'] ?></td>
                         <td style="text-align:center;"><?= $p['comments'] ?></td>
                         <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($p['created_at'])) ?></td>
+                        <td>
+                            <button class="btn-sm btn-info"
+                                onclick="openAdminModal('/malath-php-app/api/admin/get_post.php?id=<?= $p['id'] ?>')">
+                                معاينة
+                            </button>
+                        </td>
                         <td>
                             <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');">
                                 <?php csrf_field(); ?>
