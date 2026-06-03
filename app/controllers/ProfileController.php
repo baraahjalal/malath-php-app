@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\UserModel;
+use App\Models\ArticleModel;
 
 class ProfileController extends Controller {
 
@@ -10,16 +11,18 @@ class ProfileController extends Controller {
         $this->requireAuth();
         $user_id = (int)$_SESSION['user_id'];
         $model   = new UserModel();
+        $articleModel = new ArticleModel();
 
         $user               = $model->findById($user_id);
         $contributions_count = $model->getContributionsCount($user_id);
-        $saved_count        = $model->getSavedCount($user_id);
-        $activities         = $model->getActivities($user_id);
         $saved_posts        = $model->getSavedPosts($user_id);
+        $saved_articles     = $articleModel->getSavedArticles($user_id);
+        $saved_count        = count($saved_posts) + count($saved_articles);
+        $activities         = $model->getActivities($user_id);
 
         $status = $_GET['status'] ?? '';
         $this->view('profile.index', compact(
-            'user','contributions_count','saved_count','activities','saved_posts','status'
+            'user','contributions_count','saved_count','activities','saved_posts','saved_articles','status'
         ));
     }
 

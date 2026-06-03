@@ -204,35 +204,88 @@
         <!-- Tab 3: Saved Items -->
         <div class="tab-content animate-fade-in-up" id="saved-items" style="display:none;">
             <div style="max-width:800px; margin:0 auto;">
-                <?php if($saved_posts): ?>
-                    <?php foreach($saved_posts as $post): ?>
-                        <div class="feed-card">
-                            <div class="post-header">
-                                <div class="user-info">
-                                    <img src="<?=htmlspecialchars($post['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" class="user-avatar">
-                                    <div>
-                                        <b class="user-name"><?=htmlspecialchars($post['user_name'])?></b>
-                                        <div class="post-meta">نُشر في <b><?=htmlspecialchars($post['community_name'])?></b> • <?=date('Y-m-d H:i', strtotime($post['created_at']))?></div>
+
+                <!-- Sub-tabs: Posts vs Articles -->
+                <div class="saved-subtabs flex gap-4" style="margin-bottom:1.5rem; border-bottom:2px solid var(--outline-variant);">
+                    <button class="saved-subtab active" onclick="switchSavedTab(this,'saved-posts-list')"
+                        style="padding:0.6rem 1.2rem; background:none; border:none; cursor:pointer; font-size:0.95rem; font-weight:600; color:var(--primary); border-bottom:2px solid var(--primary); margin-bottom:-2px;">
+                        البوستات
+                        <span style="background:var(--primary); color:#fff; border-radius:99px; padding:0.1rem 0.55rem; font-size:0.78rem; margin-right:0.3rem;"><?= count($saved_posts) ?></span>
+                    </button>
+                    <button class="saved-subtab" onclick="switchSavedTab(this,'saved-articles-list')"
+                        style="padding:0.6rem 1.2rem; background:none; border:none; cursor:pointer; font-size:0.95rem; font-weight:600; color:var(--secondary); border-bottom:2px solid transparent; margin-bottom:-2px;">
+                        المقالات
+                        <span style="background:var(--outline-variant); color:var(--on-surface); border-radius:99px; padding:0.1rem 0.55rem; font-size:0.78rem; margin-right:0.3rem;"><?= count($saved_articles) ?></span>
+                    </button>
+                </div>
+
+                <!-- Saved Posts -->
+                <div id="saved-posts-list">
+                    <?php if($saved_posts): ?>
+                        <?php foreach($saved_posts as $post): ?>
+                            <div class="feed-card">
+                                <div class="post-header">
+                                    <div class="user-info">
+                                        <img src="<?=htmlspecialchars($post['user_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" class="user-avatar">
+                                        <div>
+                                            <b class="user-name"><?=htmlspecialchars($post['user_name'])?></b>
+                                            <div class="post-meta">نُشر في <b><?=htmlspecialchars($post['community_name'])?></b> • <?=date('Y-m-d H:i', strtotime($post['created_at']))?></div>
+                                        </div>
                                     </div>
+                                    <span class="badge-type badge-<?=htmlspecialchars($post['type'])?>">
+                                        <?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$post['type']] ?? $post['type'] ?>
+                                    </span>
                                 </div>
-                                <span class="badge-type badge-<?=htmlspecialchars($post['type'])?>">
-                                    <?= ['vent'=>'فضفضة','advice'=>'نصيحة','question'=>'سؤال','article'=>'مقالة'][$post['type']] ?? $post['type'] ?>
-                                </span>
+                                <?php if($post['title']): ?><h3 style="margin-bottom:.6rem;"><?=htmlspecialchars($post['title'])?></h3><?php endif;?>
+                                <div class="post-content"><?=nl2br(htmlspecialchars(mb_substr($post['content'],0,150)))?>...</div>
+                                <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--outline-variant); text-align:left;">
+                                    <a href="/malath-php-app/community?c=all#post-<?=$post['id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">الذهاب للمنشور</a>
+                                </div>
                             </div>
-                            <?php if($post['title']): ?><h3 style="margin-bottom:.6rem;"><?=htmlspecialchars($post['title'])?></h3><?php endif;?>
-                            <div class="post-content"><?=nl2br(htmlspecialchars(mb_substr($post['content'],0,150)))?>...</div>
-                            <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--outline-variant); text-align:left;">
-                                <a href="/malath-php-app/community?c=all#post-<?=$post['id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">الذهاب للمنشور</a>
-                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div style="text-align:center; padding:4rem 0;">
+                            <i class="fa-regular fa-bookmark" style="font-size:3rem; color:var(--outline-variant); margin-bottom:1rem; display:block;"></i>
+                            <h3 style="color:var(--secondary);">لا توجد بوستات محفوظة.</h3>
+                            <p style="color:var(--secondary); margin-top:0.5rem;">تصفحي المجتمع واضغطي على زر الحفظ للاحتفاظ بالبوستات هنا.</p>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div style="text-align:center; padding:4rem 0;">
-                        <i class="fa-regular fa-bookmark" style="font-size:3rem; color:var(--outline-variant); margin-bottom:1rem;"></i>
-                        <h3 style="color:var(--secondary);">مكتبتكِ الخاصة فارغة حالياً.</h3>
-                        <p style="color:var(--secondary); margin-top:0.5rem;">تصفحي المجتمع واضغطي على زر الحفظ للاحتفاظ بالمقالات المفيدة هنا.</p>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Saved Articles -->
+                <div id="saved-articles-list" style="display:none;">
+                    <?php if($saved_articles): ?>
+                        <?php foreach($saved_articles as $article): ?>
+                            <div class="feed-card">
+                                <div class="post-header">
+                                    <div class="user-info">
+                                        <img src="<?=htmlspecialchars($article['author_avatar'] ?: 'assets/images/default-avatar.png')?>" alt="U" class="user-avatar">
+                                        <div>
+                                            <b class="user-name"><?=htmlspecialchars($article['author_name'])?></b>
+                                            <div class="post-meta">نُشر في <b><?=htmlspecialchars($article['community_name'])?></b> • <?=date('Y-m-d H:i', strtotime($article['created_at']))?></div>
+                                        </div>
+                                    </div>
+                                    <span class="badge-type badge-article">مقالة</span>
+                                </div>
+                                <?php if($article['image']): ?>
+                                    <img src="<?=htmlspecialchars($article['image'])?>" alt="" style="width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-bottom:.8rem;">
+                                <?php endif; ?>
+                                <h3 style="margin-bottom:.6rem;"><?=htmlspecialchars($article['title'])?></h3>
+                                <div class="post-content"><?=nl2br(htmlspecialchars(mb_substr(strip_tags($article['content']),0,150)))?>...</div>
+                                <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--outline-variant); text-align:left;">
+                                    <a href="/malath-php-app/articles-single?id=<?=$article['id']?>" class="btn-outline" style="font-size:0.85rem; padding:0.4rem 1rem;">قراءة المقالة</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div style="text-align:center; padding:4rem 0;">
+                            <i class="fa-regular fa-newspaper" style="font-size:3rem; color:var(--outline-variant); margin-bottom:1rem; display:block;"></i>
+                            <h3 style="color:var(--secondary);">لا توجد مقالات محفوظة.</h3>
+                            <p style="color:var(--secondary); margin-top:0.5rem;">تصفحي المقالات واضغطي على زر الحفظ للاحتفاظ بالمقالات المفيدة هنا.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
             </div>
         </div>
 
@@ -256,6 +309,20 @@ function switchTab(btn, tabId) {
     document.querySelectorAll('.profile-tab').forEach(t => { t.classList.remove('active'); });
     document.getElementById(tabId).style.display = 'block';
     btn.classList.add('active');
+}
+function switchSavedTab(btn, listId) {
+    document.querySelectorAll('#saved-posts-list, #saved-articles-list').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll('.saved-subtab').forEach(t => {
+        t.style.color = 'var(--secondary)';
+        t.style.borderBottomColor = 'transparent';
+        t.querySelector('span').style.background = 'var(--outline-variant)';
+        t.querySelector('span').style.color = 'var(--on-surface)';
+    });
+    document.getElementById(listId).style.display = 'block';
+    btn.style.color = 'var(--primary)';
+    btn.style.borderBottomColor = 'var(--primary)';
+    btn.querySelector('span').style.background = 'var(--primary)';
+    btn.querySelector('span').style.color = '#fff';
 }
 </script>
 
