@@ -179,6 +179,7 @@
         </a>
         <button id="save-btn"
                 class="btn-save-article <?= $isSaved ? 'active-save' : '' ?>"
+                title="<?= $isSaved ? 'إلغاء حفظ المقالة' : 'حفظ المقالة' ?>"
                 onclick="toggleArticleSave(this)">
             <i class="<?= $isSaved ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
             <span><?= $isSaved ? 'مُحفوظة' : 'حفظ المقالة' ?></span>

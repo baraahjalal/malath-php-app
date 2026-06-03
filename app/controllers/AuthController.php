@@ -70,8 +70,8 @@ class AuthController extends Controller {
             $error = "جميع الحقول مطلوبة!";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = "صيغة البريد الإلكتروني غير صحيحة!";
-        } elseif (strlen($password) < 6) {
-            $error = "كلمة المرور يجب أن تكون 6 أحرف أو أكثر.";
+        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()\-_=+\[\]{};:\'",.<>?\/\\|`~]).{8,}$/', $password)) {
+            $error = "كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل، حرف كبير، حرف صغير، رقم، ورمز خاص.";
         } elseif ($model->emailExists($email)) {
             $error = "البريد الإلكتروني مستخدم بالفعل.";
         } else {

@@ -115,7 +115,7 @@
 <main class="admin-main">
     <header class="admin-header">
         <div style="display:flex;align-items:center;">
-            <button class="admin-menu-toggle" id="adminMenuToggle"><i class="fa-solid fa-bars"></i></button>
+            <button class="admin-menu-toggle" id="adminMenuToggle" title="القائمة الجانبية"><i class="fa-solid fa-bars"></i></button>
             <h2 class="font-headline font-bold text-primary-dark" style="font-size:1.3rem;margin:0;">
                 <?= ['overview'=>'لوحة الإحصائيات','users'=>'إدارة العضوات','posts'=>'إدارة المنشورات','articles'=>'مقالات معلّقة'][$tab] ?? 'لوحة التحكم' ?>
             </h2>
@@ -234,7 +234,7 @@
                         <td><span class="badge-role-<?= $u['role'] ?> user-role-badge"><?= $u['role']==='admin'?'مشرفة':'عضوة' ?></span></td>
                         <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($u['created_at'])) ?></td>
                         <td>
-                            <button class="btn-sm btn-info"
+                            <button class="btn-sm btn-info" title="معاينة بيانات العضوة"
                                 onclick="openAdminModal('/malath-php-app/api/admin/get_user.php?id=<?= $u['id'] ?>')">
                                 معاينة
                             </button>
@@ -246,12 +246,12 @@
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
                                     <input type="hidden" name="new_role" value="<?= $u['role']==='admin'?'user':'admin' ?>">
-                                    <button type="submit" name="toggle_role" class="btn-sm btn-info user-toggle-btn"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
+                                    <button type="submit" name="toggle_role" title="<?= $u['role']==='admin'?'إزالة صلاحية المشرفة':'منح صلاحية المشرفة' ?>" class="btn-sm btn-info user-toggle-btn"><?= $u['role']==='admin'?'إزالة المشرفة':'ترقية لمشرفة' ?></button>
                                 </form>
                                 <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذه العضو نهائياً؟');">
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
-                                    <button type="submit" name="delete_user" class="btn-sm btn-danger">حذف</button>
+                                    <button type="submit" name="delete_user" title="حذف العضوة نهائياً" class="btn-sm btn-danger">حذف</button>
                                 </form>
                                 <?php else: ?>
                                 <span style="font-size:.8rem;color:var(--secondary);">أنتِ</span>
@@ -311,21 +311,21 @@
                 </td>
                 <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($a['created_at'])) ?></td>
                 <td>
-                    <button class="btn-sm btn-info"
+                    <button class="btn-sm btn-info" title="معاينة المقال"
                         onclick="openAdminModal('/malath-php-app/api/admin/get_article.php?id=<?= $a['id'] ?>')">
                         معاينة
                     </button>
                 </td>
                 <td class="article-action-cell" style="white-space:nowrap;">
                     <?php if($a['status'] === 'pending'): ?>
-                        <button class="btn-sm" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
-                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">❌ رفض</button>
+                        <button class="btn-sm" title="نشر المقال" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
+                        <button class="btn-sm btn-danger" title="رفض المقال" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">❌ رفض</button>
                     <?php elseif($a['status'] === 'approved'): ?>
-                        <button class="btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">🚫 رفض</button>
-                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
+                        <button class="btn-sm" title="رفض المقال" style="background:#fee2e2;color:#b91c1c;" onclick="adminArticleAction(<?= $a['id'] ?>,'reject')">🚫 رفض</button>
+                        <button class="btn-sm btn-danger" title="حذف المقال نهائياً" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
                     <?php else: ?>
-                        <button class="btn-sm" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
-                        <button class="btn-sm btn-danger" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
+                        <button class="btn-sm" title="نشر المقال" style="background:#dcfce7;color:#166534;" onclick="adminArticleAction(<?= $a['id'] ?>,'approve')">✅ قبول</button>
+                        <button class="btn-sm btn-danger" title="حذف المقال نهائياً" onclick="adminArticleAction(<?= $a['id'] ?>,'delete')">🗑 حذف</button>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -354,7 +354,7 @@
                         <td style="text-align:center;"><?= $p['comments'] ?></td>
                         <td style="color:var(--secondary);font-size:.85rem;"><?= date('Y-m-d', strtotime($p['created_at'])) ?></td>
                         <td>
-                            <button class="btn-sm btn-info"
+                            <button class="btn-sm btn-info" title="معاينة المنشور"
                                 onclick="openAdminModal('/malath-php-app/api/admin/get_post.php?id=<?= $p['id'] ?>')">
                                 معاينة
                             </button>
@@ -363,7 +363,7 @@
                             <form method="POST" action="/malath-php-app/dashboard" style="display:inline;" onsubmit="return confirm('حذف هذا المنشور نهائياً؟');">
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="post_id" value="<?= $p['id'] ?>">
-                                <button type="submit" name="delete_post" class="btn-sm btn-danger">حذف</button>
+                                <button type="submit" name="delete_post" title="حذف المنشور نهائياً" class="btn-sm btn-danger">حذف</button>
                             </form>
                         </td>
                     </tr>

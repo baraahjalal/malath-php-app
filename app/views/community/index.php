@@ -315,11 +315,12 @@
                         class="interaction-btn <?= $post['is_liked'] ? 'active-like' : '' ?>"
                         id="like-btn-<?=$post['id']?>"
                         data-post="<?=$post['id']?>"
+                        title="<?= $post['is_liked'] ? 'إلغاء الإعجاب' : 'إعجاب' ?>"
                         onclick="<?= $user_id ? 'ajaxLike(this)' : "location.href='/malath-php-app/login'" ?>">
                         <i class="<?= $post['is_liked'] ? 'fa-solid' : 'fa-regular' ?> fa-heart"></i>
                         <span id="like-count-<?=$post['id']?>"><?= $post['likes_count'] ?> إعجاب</span>
                     </button>
-                    <button type="button" class="interaction-btn" onclick="toggleComments(<?=$post['id']?>)">
+                    <button type="button" class="interaction-btn" title="عرض التعليقات" onclick="toggleComments(<?=$post['id']?>)">
                         <i class="fa-regular fa-comment"></i>
                         <span id="comment-count-<?=$post['id']?>"><?= $post['comments_count'] ?> تعليق</span>
                     </button>
@@ -328,6 +329,7 @@
                     class="interaction-btn <?= $post['is_saved'] ? 'active-save' : '' ?>"
                     id="save-btn-<?=$post['id']?>"
                     data-post="<?=$post['id']?>"
+                    title="<?= $post['is_saved'] ? 'إلغاء الحفظ' : 'حفظ المنشور' ?>"
                     onclick="<?= $user_id ? 'ajaxSave(this)' : "location.href='/malath-php-app/login'" ?>">
                     <i class="<?= $post['is_saved'] ? 'fa-solid' : 'fa-regular' ?> fa-bookmark"></i>
                     <span id="save-label-<?=$post['id']?>"><?= $post['is_saved'] ? 'مُحفوظ' : 'حفظ' ?></span>

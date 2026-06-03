@@ -165,11 +165,11 @@
 
                                 <?php if ($act['activity_type'] === 'post'): ?>
                                 <div class="post-actions-crud">
-                                    <button type="button" onclick="toggleEditForm(<?=$act['post_id']?>)" class="btn-crud-edit"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
+                                    <button type="button" title="تعديل المنشور" onclick="toggleEditForm(<?=$act['post_id']?>)" class="btn-crud-edit"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
                                     <form method="POST" action="/malath-php-app/profile" style="display:inline;" onsubmit="return confirm('هل أنتِ متأكدة من مسح هذا المنشور؟');">
                                         <?php csrf_field(); ?>
                                         <input type="hidden" name="delete_post_id" value="<?=$act['post_id']?>">
-                                        <button type="submit" class="btn-crud-delete"><i class="fa-solid fa-trash"></i> مسح</button>
+                                        <button type="submit" title="مسح المنشور" class="btn-crud-delete"><i class="fa-solid fa-trash"></i> مسح</button>
                                     </form>
                                 </div>
                                 <div id="edit-form-<?=$act['post_id']?>" style="display:none; margin-top:1rem; border-top:1px solid var(--outline-variant); padding-top:1rem;">

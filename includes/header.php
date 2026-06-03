@@ -37,7 +37,7 @@
     <div class="container flex justify-between items-center">
         <div style="display:flex; align-items:center; gap:0.5rem;">
             <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn hidden-desktop" id="mobileMenuBtn">
+            <button class="mobile-menu-btn hidden-desktop" id="mobileMenuBtn" title="القائمة">
                 <i class="fa-solid fa-bars"></i>
             </button>
             <!-- Logo -->
@@ -56,7 +56,7 @@
     <?php if (isset($_SESSION['user_id'])): ?>
         <!-- الإشعارات — يُحمَّل بـ AJAX -->
         <div style="position: relative;" id="notification-wrapper">
-            <button class="icon-button" id="notification-btn">
+            <button class="icon-button" id="notification-btn" title="الإشعارات">
                 <i class="fa-regular fa-bell" style="font-size: 1.25rem;"></i>
                 <span class="notification-badge" id="notif-badge" style="display:none;"></span>
             </button>
@@ -159,7 +159,7 @@
 <div class="mobile-drawer" id="mobileDrawer">
     <div class="mobile-drawer-header">
         <a href="/malath-php-app/index" class="text-primary font-black font-headline" style="font-size: 1.875rem; text-decoration: none;">ملاذ</a>
-        <button class="close-drawer-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+        <button class="close-drawer-btn" id="closeDrawerBtn" title="إغلاق القائمة"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="mobile-drawer-links font-headline">
         <a href="/malath-php-app/index" class="mobile-nav-link <?php echo ($current_page == 'index' || $current_page == '') ? 'active' : ''; ?>"><i class="fa-solid fa-house"></i> الرئيسية</a>

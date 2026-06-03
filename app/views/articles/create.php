@@ -313,7 +313,7 @@
             </div>
 
             <!-- زر الإرسال -->
-            <button type="submit" class="btn-submit-article" id="submit-btn">
+            <button type="submit" class="btn-submit-article" id="submit-btn" title="إرسال المقالة للمراجعة">
                 <i class="fa-solid fa-paper-plane"></i>
                 إرسال للمراجعة
             </button>
