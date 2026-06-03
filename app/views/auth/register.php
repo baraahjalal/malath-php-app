@@ -204,8 +204,9 @@
                     <div class="input-group">
                         <label class="input-label">كلمة المرور</label>
                         <div class="input-icon-wrapper">
-                            <input name="password" id="register-password" class="form-control" placeholder="••••••••" type="password" required>
-                            <i class="fa-solid fa-lock"></i>
+                            <input name="password" id="register-password" class="form-control" placeholder="••••••••" type="password" required style="padding-left: 3rem;">
+                            <i class="fa-solid fa-lock" style="right: 1.25rem;"></i>
+                            <i class="fa-regular fa-eye toggle-password" style="left: 1.25rem; right: auto; cursor: pointer;"></i>
                         </div>
                         
                         <!-- Password Strength UI -->
@@ -307,6 +308,22 @@ document.addEventListener('DOMContentLoaded', function() {
             strengthText.textContent = text;
         });
     }
+
+    const togglePasswords = document.querySelectorAll('.toggle-password');
+    togglePasswords.forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
+        });
+    });
 });
 </script>
 

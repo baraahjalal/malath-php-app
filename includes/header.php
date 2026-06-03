@@ -90,14 +90,22 @@
                     list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--secondary);font-size:.9rem;">لا توجد إشعارات بعد.</div>';
                     return;
                 }
-                list.innerHTML = data.notifications.map(n => `
-                    <div class="notification-item ${n.is_read ? '' : 'unread'}">
+                list.innerHTML = data.notifications.map(n => {
+                    let link = '#';
+                    if (n.post_id) {
+                        link = `/malath-php-app/community#post-${n.post_id}`;
+                    } else if (n.type === 'join') {
+                        link = '/malath-php-app/community';
+                    }
+                    return `
+                    <a href="${link}" class="notification-item ${n.is_read ? '' : 'unread'}" style="text-decoration: none; color: inherit; display: flex;">
                         <div class="notification-icon"><i class="fa-solid ${n.icon}"></i></div>
                         <div class="notification-content">
                             <p><strong>${n.actor_name}</strong> ${n.label}</p>
                             <span class="notification-time">${n.time}</span>
                         </div>
-                    </div>`).join('');
+                    </a>`;
+                }).join('');
             }
 
             btn.addEventListener('click', async (e) => {
